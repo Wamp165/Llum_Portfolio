@@ -1,10 +1,5 @@
-¡Perfecto! Ahora que **backend (Node + Prisma + Postgres + Docker)** y **frontend (Vite + React + Tailwind)** funcionan, te preparo un **README.md profesional**, listo para subir a GitHub.
-
----
-
 # 📘 **README.md — Llum Portfolio**
 
-````md
 # 🌟 Llum Portfolio
 
 Aplicación full-stack construida con:
