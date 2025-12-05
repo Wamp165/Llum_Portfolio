@@ -1,48 +1,58 @@
-# 📘 **README.md — Llum Portfolio**
+# 📝 **README.md (completo y profesional)**
 
-# 🌟 Llum Portfolio
 
-Aplicación full-stack construida con:
+# 🌟 Llum Portfolio — Full-Stack Project
 
-- **Node.js + Express + TypeScript**
-- **Prisma ORM**
-- **PostgreSQL**
-- **Docker & Docker Compose**
-- **React + Vite + TailwindCSS**
+Proyecto full-stack construido con:
 
-Este proyecto sirve como base para un portafolio profesional completamente desplegable mediante Docker.
+- **Backend:** Node.js + Express + TypeScript  
+- **Base de datos:** PostgreSQL  
+- **ORM:** Prisma  
+- **Frontend:** React + Vite + TypeScript + TailwindCSS  
+- **Contenedores:** Docker & Docker Compose  
 
----
-
-## 📦 Tecnologías
-
-### **Backend**
-- Node.js
-- Express
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- Docker
-
-### **Frontend**
-- React + Vite
-- TypeScript
-- TailwindCSS
+Este repositorio contiene todo lo necesario para levantar un entorno moderno de desarrollo totalmente dockerizado.
 
 ---
 
-## 🚀 Cómo ejecutar el proyecto
+## 📦 Estructura del proyecto
 
-### 🔧 **Requisitos previos**
-Asegúrate de tener instalado:
 
-- Docker  
-- Docker Compose  
-- Node.js (solo si deseas ejecutar el frontend fuera de Docker)
+Llum_Portfolio/
+│
+├── backend/
+│   ├── src/
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── Dockerfile
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── Dockerfile
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── docker-compose.yml
+└── README.md
+
 
 ---
 
-# 🐳 Ejecutar todo con Docker
+# 🐳 **Ejecución con Docker**
+
+Asegúrate de tener instalados:
+
+- Docker Desktop  
+- Node.js 20+ (solo si deseas ejecutar scripts fuera de Docker)
+
+---
+
+## ▶️ **Iniciar todos los servicios**
 
 Desde la raíz del proyecto:
 
@@ -50,37 +60,50 @@ Desde la raíz del proyecto:
 docker compose up --build
 ````
 
-Esto levanta:
+Esto iniciará:
 
-| Servicio | Puerto | Descripción           |
-| -------- | ------ | --------------------- |
-| backend  | 4000   | API en Express/Prisma |
-| postgres | 5432   | Base de datos         |
-| frontend | 5173   | Aplicación React      |
-
-Una vez en ejecución:
-
-👉 **Frontend:** [http://localhost:5173](http://localhost:5173)
-👉 **Backend:** [http://localhost:4000/api](http://localhost:4000/api)
-👉 **Postgres (Docker):** postgres://user:password@localhost:5432/portfolio
+| Servicio     | Puerto local                                   | Descripción              |
+| ------------ | ---------------------------------------------- | ------------------------ |
+| **frontend** | [http://localhost:5173](http://localhost:5173) | React + Vite             |
+| **backend**  | [http://localhost:4000](http://localhost:4000) | API REST en Express      |
+| **postgres** | localhost:5432                                 | Base de datos PostgreSQL |
 
 ---
 
-## 🗄️ Migraciones de Prisma
+# 🧠 **Tecnologías utilizadas**
 
-Para crear el cliente de Prisma:
+## 🔹 Backend
+
+* Express + TypeScript
+* Prisma ORM
+* PostgreSQL
+* ts-node-dev (hot reload)
+
+### Scripts útiles del backend:
 
 ```bash
-npx prisma generate
+npm run dev          # Ejecutar servidor en desarrollo
+npm run build        # Compilar TypeScript
+npm start            # Ejecutar versión compilada
 ```
 
-Para crear una migración:
+---
+
+# 🛢️ **Base de datos con Prisma**
+
+### Crear migración:
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-Para abrir Prisma Studio:
+### Regenerar Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+### Abrir Prisma Studio:
 
 ```bash
 npx prisma studio
@@ -88,74 +111,83 @@ npx prisma studio
 
 ---
 
-## 📁 Estructura del proyecto
+# 🎨 **Frontend**
 
-```
-Llum_Portfolio/
-│
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── migrations/
-│   ├── src/
-│   │   ├── server.ts
-│   │   └── app.ts
-│   ├── Dockerfile
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── main.tsx
-│   │   └── App.tsx
-│   ├── tailwind.config.js
-│   ├── postcss.config.cjs
-│   ├── Dockerfile
-│   └── package.json
-│
-└── docker-compose.yml
-```
+Frontend hecho con:
 
----
+* React
+* Vite
+* TailwindCSS
+* TypeScript
 
-## 🎨 Frontend (Vite + React + Tailwind)
-
-Si quieres ejecutar el frontend sin Docker:
+### Ejecutar fuera de Docker (opcional):
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
 ---
 
-## 🧪 Endpoints del backend
+# ⚙️ **Variables de entorno**
 
-| Método   | Ruta          | Descripción                        |
-| -------- | ------------- | ---------------------------------- |
-| GET      | /api/health   | Verifica que el servidor funciona  |
-| GET/POST | /api/projects | CRUD de proyectos (ejemplo futuro) |
-
----
-
-## 🔐 Variables de entorno
-
-Crea un archivo `.env` dentro de **backend/**:
+Crear archivo `.env` dentro de `backend/`:
 
 ```
-DATABASE_URL="postgresql://postgres:password@postgres:5432/portfolio"
-EXPOSED_PORT=4000
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/portfolio"
+```
+
+Si deseas ejecutar el backend SIN Docker, debes cambiar `postgres` por `localhost`:
+
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/portfolio"
 ```
 
 ---
 
-## 👤 Autor
+# 🐳 **docker-compose.yml**
 
-**Oscar**
-Proyecto full-stack con Docker, Prisma, PostgreSQL y React.
+Coordina los tres servicios:
+
+* postgres
+* backend
+* frontend
+
+El backend espera a la DB, y el frontend espera al backend.
 
 ---
 
-## ⭐ ¿Te gusta este repo?
+# 🧪 **Endpoints del backend**
 
-¡No olvides dejar una estrella en GitHub ⭐!
+Ejemplo de endpoint inicial:
+
+```http
+GET http://localhost:4000/
+```
+
+Respuesta:
+
+```json
+{ "message": "API funcionando correctamente 🚀" }
+```
+
+Puedes agregar tus rutas dentro de `src/app.ts`.
+
+---
+
+# 🚀 Deployment futuro
+
+Este proyecto puede desplegarse fácilmente en:
+
+* Render
+* Railway
+* Fly.io
+* Vercel (solo frontend)
+
+Si deseas generar archivos de producción (imágenes más ligeras), puedo ayudarte.
+
+---
+
+# 🤝 Contribuciones
+
+Pull requests y sugerencias siempre son bienvenidas.
+Si encuentras algún bug, abre un issue ✨.
