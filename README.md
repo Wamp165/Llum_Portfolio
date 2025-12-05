@@ -159,16 +159,3 @@ Proyecto full-stack con Docker, Prisma, PostgreSQL y React.
 ## ⭐ ¿Te gusta este repo?
 
 ¡No olvides dejar una estrella en GitHub ⭐!
-
-```
-
----
-
-Si quieres, puedo:
-
-✅ Añadir imágenes y badges  
-✅ Añadir instrucciones para despliegue en producción  
-✅ Añadir secciones avanzadas (CI/CD, tests, branches)  
-
-¿Quieres extender el README con más contenido profesional?
-```
