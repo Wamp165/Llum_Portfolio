@@ -1,6 +1,6 @@
 # 📝 **README.md (completo y profesional)**
 
-
+```md
 # 🌟 Llum Portfolio — Full-Stack Project
 
 Proyecto full-stack construido con:
@@ -17,6 +17,7 @@ Este repositorio contiene todo lo necesario para levantar un entorno moderno de 
 
 ## 📦 Estructura del proyecto
 
+```
 
 Llum_Portfolio/
 │
@@ -40,6 +41,7 @@ Llum_Portfolio/
 ├── docker-compose.yml
 └── README.md
 
+````
 
 ---
 
