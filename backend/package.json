@@ -1,21 +1,19 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
-  },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "description": "",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
-    "express": "^5.2.1",
-    "prisma": "^5.22.0"
+    "express": "^5.2.1"
   },
   "devDependencies": {
+    "prisma": "^5.22.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
