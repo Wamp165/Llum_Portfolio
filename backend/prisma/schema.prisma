@@ -1,6 +1,7 @@
+// prisma/schema.prisma
+
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,8 +9,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- ENUMS ---
+
+enum Category {
+  PROJECT
+  PLACE
+  COMMERCIAL
+}
+
+enum WorkSectionType {
+  IMAGE_LEFT_TEXT_RIGHT
+  IMAGE_RIGHT_TEXT_LEFT
+  IMAGE_CENTER
+  TEXT_ONLY
+  IMAGE_ONLY
+}
+
+// --- MODELS ---
+
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  name  String
+  id         Int     @id @default(autoincrement())
+  name       String
+  slug       String  @unique
+  bio        String?
+  homeBanner String?
+
+  works Work[]
+}
+
+model Work {
+  id        Int        @id @default(autoincrement())
+  title     String
+  banner    String?
+  category  Category
+  createdAt DateTime   @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  sections WorkSection[]
+}
+
+model WorkSection {
+  id        Int      @id @default(autoincrement())
+  type      WorkSectionType
+  text      String?
+  image     String?
+  order     Int
+
+  workId Int
+  work   Work @relation(fields: [workId], references: [id])
 }

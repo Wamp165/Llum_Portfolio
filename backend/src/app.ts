@@ -1,13 +1,12 @@
 import express from "express";
-import cors from "cors";
+import routes from "./routes";
 
 const app = express();
 
-app.use(cors());
+// Allows JSON bodies in requests
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Backend running with Prisma 5 🚀");
-});
+// Register all routes
+app.use(routes);
 
 export default app;

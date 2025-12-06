@@ -20,6 +20,7 @@ services:
     restart: always
     ports:
       - "4000:4000"
+      - "5555:5555"
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/portfolio"
     volumes:
