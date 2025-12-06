@@ -1,5 +1,3 @@
-# 📝 **README.md (completo y profesional)**
-
 ```md
 # 🌟 Llum Portfolio — Full-Stack Project
 
