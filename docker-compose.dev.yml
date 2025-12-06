@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15
-    container_name: portfolio-postgres
+    container_name: portfolio-postgres-dev
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -12,34 +10,40 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
-    container_name: portfolio-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: portfolio-backend-dev
     restart: always
     ports:
       - "4000:4000"
-      - "5555:5555"
+      - "5555:5555" # Prisma Studio
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/portfolio"
     volumes:
       - ./backend:/app
+      - /app/node_modules
     depends_on:
       - postgres
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: portfolio-frontend
+      dockerfile: Dockerfile.dev
+    container_name: portfolio-frontend-dev
+    restart: always
     ports:
       - "5173:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend
-      
+
 volumes:
-  postgres_data:
+  postgres_data_dev:
