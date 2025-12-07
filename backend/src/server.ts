@@ -11,8 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 // Register routes
-app.use("/user", userRoutes);
-app.use("/works", worksRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/works", worksRoutes);
 
 // Start server
 const PORT = process.env.PORT || 4000;
