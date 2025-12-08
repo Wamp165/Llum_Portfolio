@@ -23,15 +23,17 @@ router.get("/:slug", async (req, res) => {
   try {
     const works = await prisma.work.findMany({
       where: { user: { slug } },
-      orderBy: { createdAt: "desc" },
+      orderBy: { order: "asc" },
       select: {
         id: true,
         title: true,
         banner: true,
         category: true,
-        createdAt: true,
+        description: true,
+        order: true,
       },
     });
+
 
     return res.json(works);
   } catch (err: unknown) {
@@ -47,7 +49,7 @@ router.get("/:slug", async (req, res) => {
    ============================================================ */
 router.post("/:slug", async (req, res) => {
   const { slug } = req.params;
-  const { title, banner, category } = req.body;
+  const { title, description, banner, category } = req.body;
 
   try {
     const user = await prisma.user.findUnique({ where: { slug } });
@@ -57,7 +59,7 @@ router.post("/:slug", async (req, res) => {
     }
 
     const newWork = await prisma.work.create({
-      data: { title, banner, category, userId: user.id },
+      data: { title, description, banner, category, userId: user.id },
     });
 
     return res.json(newWork);

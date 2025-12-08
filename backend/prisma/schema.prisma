@@ -43,6 +43,7 @@ model Work {
   description String
   banner      String?
   category    Category
+  order       Int        @default(0)
   createdAt   DateTime   @default(now())
 
   userId Int

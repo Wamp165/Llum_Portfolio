@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import { Link } from "react-router-dom";
 
 interface NavbarProps {
