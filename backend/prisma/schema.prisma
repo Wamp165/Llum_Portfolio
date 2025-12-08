@@ -13,7 +13,7 @@ datasource db {
 
 enum Category {
   PROJECT
-  SERIE
+  STORY
   COMMERCIAL
 }
 
@@ -38,11 +38,12 @@ model User {
 }
 
 model Work {
-  id        Int        @id @default(autoincrement())
-  title     String
-  banner    String?
-  category  Category
-  createdAt DateTime   @default(now())
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  banner      String?
+  category    Category
+  createdAt   DateTime   @default(now())
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
