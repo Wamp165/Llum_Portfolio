@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import { Link } from "react-router-dom";
 
 interface NavbarProps {
@@ -20,7 +21,7 @@ export default function Navbar({ slug, name }: NavbarProps) {
             <div>{lastName}</div>
           </Link>
           <Link to={`/${slug}/projects`} className="hover:opacity-60 transition ">Projects</Link>
-          <Link to={`/${slug}/series`} className="hover:opacity-60 transition">Series</Link>
+          <Link to={`/${slug}/stories`} className="hover:opacity-60 transition">Stories</Link>
           <Link to={`/${slug}/commercial`} className="hover:opacity-60 transition">Commercials</Link>
           <Link to={`/${slug}/contact`} className="hover:opacity-60 transition">Contact</Link>
           <div/>
