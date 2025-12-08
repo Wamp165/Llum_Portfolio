@@ -47,10 +47,12 @@ export default function WorkListPage({ category }: { category: string }) {
     <div className="min-h-screen bg-white">
       <Navbar slug={slug!} name={user.name} />
 
-      <div className="max-w-5xl mx-auto mt-16">
+      <div className="w-full flex flex-col items-center mt-14">
         {works.map((work) => (
-          <div key={work.id} className="flex gap-10 mb-24 items-start">
-
+          <div
+            key={work.id}
+            className="flex gap-48 mb-24 items-start justify-center w-full max-w-4xl"
+          >
             {/* IMAGE */}
             <img
               src={work.banner ?? ""}
@@ -59,11 +61,9 @@ export default function WorkListPage({ category }: { category: string }) {
             />
 
             {/* TEXT */}
-            <div className="text-center mx-auto w-[300px]">
+            <div className="text-center w-[300px]">
               <h2 className="text-lg font-semibold">{work.title}</h2>
-              <p className="text-sm leading-relaxed mt-4">
-                {work.description}
-              </p>
+              <p className="text-sm leading-relaxed mt-4">{work.description}</p>
             </div>
           </div>
         ))}

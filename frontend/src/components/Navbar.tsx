@@ -15,8 +15,8 @@ export default function Navbar({ slug, name }: NavbarProps) {
       <nav className="max-w-7xl mx-auto flex items-center text-[17px] font-light text-black">
 
         {/* MENU */}
-        <div className="flex-1 flex justify-center gap-40">
-          <Link to={`/${slug}`} className="hover:opacity-60 transition -translate-y-2 relative font-medium">
+        <div className="flex-1 flex justify-center gap-36">
+          <Link to={`/${slug}`} className="hover:opacity-60 transition -translate-y-6 relative font-medium">
             <div>{firstName}</div>
             <div>{lastName}</div>
           </Link>
@@ -24,7 +24,6 @@ export default function Navbar({ slug, name }: NavbarProps) {
           <Link to={`/${slug}/stories`} className="hover:opacity-60 transition">Stories</Link>
           <Link to={`/${slug}/commercial`} className="hover:opacity-60 transition">Commercials</Link>
           <Link to={`/${slug}/contact`} className="hover:opacity-60 transition">Contact</Link>
-          <div/>
         </div>
 
       </nav>
