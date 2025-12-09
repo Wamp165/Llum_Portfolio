@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 
 interface Work {
   id: number;
@@ -49,9 +50,10 @@ export default function WorkListPage({ category }: { category: string }) {
 
       <div className="w-full flex flex-col items-center mt-14">
         {works.map((work) => (
-          <div
+          <Link
             key={work.id}
-            className="flex gap-48 mb-24 items-start justify-center w-full max-w-4xl"
+            to={`/${slug}/works/${work.id}`}
+            className="flex gap-48 mb-24 items-start justify-center w-full max-w-4xl hover:opacity-70 transition"
           >
             {/* IMAGE */}
             <img
@@ -65,7 +67,7 @@ export default function WorkListPage({ category }: { category: string }) {
               <h2 className="text-lg font-semibold">{work.title}</h2>
               <p className="text-sm leading-relaxed mt-4">{work.description}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
