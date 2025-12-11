@@ -6,7 +6,7 @@ const router = Router();
 
 /* ============================================================
    GET /user/:slug
-   Get public user profile for homepage
+   Get public user profile
    ============================================================ */
 router.get("/:slug", async (req, res) => {
   const { slug } = req.params;
@@ -19,7 +19,12 @@ router.get("/:slug", async (req, res) => {
         name: true,
         slug: true,
         bio: true,
-        homeBanner: true, // homepage banner image
+        homeBanner: true,
+        profilePicture: true,
+        email: true,
+        instagram: true,
+        substack: true,
+        location: true,
       },
     });
 

@@ -7,7 +7,13 @@ async function main() {
     data: {
       name: "Zuzanna Basiukiewicz",
       slug: "zuzanna",
-      homeBanner:"https://res.cloudinary.com/dr2l0nou2/image/upload/v1765117248/_8310282_1-kopia_mllko3.jpg",
+      homeBanner: "https://res.cloudinary.com/dr2l0nou2/image/upload/v1765117248/_8310282_1-kopia_mllko3.jpg",
+      profilePicture: "https://res.cloudinary.com/dr2l0nou2/image/upload/v1765460218/IMG_1083_mihsfp.jpg",
+      email: "basiuzuza@gmail.com",
+      instagram: "toiyashi",
+      substack: "toiyashi.substack.com",
+      bio: "Hi, I'm Zuzanna, a passionate photographer based in Poland. My journey into photography began several years ago, and since then, I've been captivated by the art of capturing moments that tell a story.",
+      location: "Open to work anywhere in Europe and beyond.",
     },
   });
 
@@ -97,7 +103,6 @@ async function main() {
   await prisma.workSection.create({
     data: {
       type: WorkSectionType.IMAGE_ONLY,
-      text: "Where did the child we used to be?",
       image: "https://res.cloudinary.com/dr2l0nou2/image/upload/v1765199550/5foto_c2bmdb.jpg",
       order: 4,
       work: { connect: { id: 2 } },
