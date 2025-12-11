@@ -4,6 +4,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import StoriesPage from "./pages/StoriesPage";
 import CommercialsPage from "./pages/CommercialsPage";
 import WorkDetailPage from "./pages/WorkDetailPage";
+import ContactPage from "./pages/ContactPage";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/:slug/stories" element={<StoriesPage />} />
         <Route path="/:slug/commercial" element={<CommercialsPage />} />
         <Route path="/:slug/works/:workId" element={<WorkDetailPage />} />
+        <Route path="/:slug/contact" element={<ContactPage />} />
       </Routes>
     </BrowserRouter>
   );

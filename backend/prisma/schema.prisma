@@ -28,11 +28,16 @@ enum WorkSectionType {
 // --- MODELS ---
 
 model User {
-  id         Int     @id @default(autoincrement())
-  name       String
-  slug       String  @unique
-  bio        String?
-  homeBanner String?
+  id              Int     @id @default(autoincrement())
+  name            String
+  slug            String  @unique
+  bio             String?
+  homeBanner      String?
+  profilePicture  String?
+  email           String?
+  instagram       String?
+  substack        String?
+  location        String?
 
   works Work[]
 }
