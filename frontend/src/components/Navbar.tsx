@@ -1,5 +1,5 @@
 // src/components/Navbar.tsx
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface NavbarProps {
   slug: string;
@@ -7,23 +7,53 @@ interface NavbarProps {
 }
 
 export default function Navbar({ slug, name }: NavbarProps) {
+  const location = useLocation();
   const [firstName, ...rest] = name.split(" ");
   const lastName = rest.join(" ");
 
-  return (
-    <header className="w-full pt-10">
-      <nav className="max-w-7xl mx-auto flex items-center text-[17px] font-light text-black">
+  const menu = [
+    { label: "Projects", path: `/${slug}/projects` },
+    { label: "Stories", path: `/${slug}/stories` },
+    { label: "Commercial", path: `/${slug}/commercial` },
+    { label: "Contact", path: `/${slug}/contact` },
+  ];
 
-        {/* MENU */}
-        <div className="flex-1 flex justify-center gap-36">
-          <Link to={`/${slug}`} className="hover:opacity-60 transition -translate-y-6 relative font-medium">
-            <div>{firstName}</div>
-            <div>{lastName}</div>
-          </Link>
-          <Link to={`/${slug}/projects`} className="hover:opacity-60 transition ">Projects</Link>
-          <Link to={`/${slug}/stories`} className="hover:opacity-60 transition">Stories</Link>
-          <Link to={`/${slug}/commercial`} className="hover:opacity-60 transition">Commercials</Link>
-          <Link to={`/${slug}/contact`} className="hover:opacity-60 transition">Contact</Link>
+  return (
+    <header className="w-full pt-12">
+      <nav className="max-w-[80%] mx-auto grid grid-cols-12 items-start">
+
+        <div className="col-start-2 col-span-3">
+          <div className="inline-block -translate-y-3">
+            <Link
+              to={`/${slug}`}
+              className="block font-light tracking-[0.18em] leading-[1.4] text-[17px]"
+            >
+              <div>{firstName}</div>
+              <div>{lastName}</div>
+            </Link>
+
+            <div className="mt-1 border-b border-neutral-300 w-full" />
+          </div>
+        </div>
+
+        <div className="col-start-6 col-span-6 flex justify-between text-[17px] font-light">
+          {menu.map((item) => {
+            const active = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={
+                  "transition " +
+                  (active
+                    ? "font-medium text-black"
+                    : "text-neutral-400 hover:text-black/60")
+                }
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
 
       </nav>
