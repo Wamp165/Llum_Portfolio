@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ENUMS ---
+
+enum WorkSectionType {
+  IMAGE_LEFT_TEXT_RIGHT
+  IMAGE_RIGHT_TEXT_LEFT
+  IMAGE_CENTER_TEXT_BELOW
+  TEXT_ONLY
+  IMAGE_ONLY
+}
+
+// --- MODELS ---
+
+model User {
+  id             Int     @id @default(autoincrement())
+  name           String
+  bio            String?
+  homeBanner     String?
+  profilePicture String?
+  email          String?
+  instagram      String?
+  substack       String?
+  location       String?
+
+  works          Work[]
+}
+
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  order       Int     @default(0)
+
+  works       Work[]
+}
+
+model Work {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  banner      String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  sections    WorkSection[]
+}
+
+model WorkSection {
+  id        Int              @id @default(autoincrement())
+  type      WorkSectionType
+  text      String?
+  order     Int
+
+  workId    Int
+  work      Work             @relation(fields: [workId], references: [id])
+
+  images    WorkSectionImage[]
+}
+
+model WorkSectionImage {
+  id            Int      @id @default(autoincrement())
+  imageUrl      String
+  order         Int
+
+  workSectionId Int
+  workSection   WorkSection @relation(fields: [workSectionId], references: [id])
+}
