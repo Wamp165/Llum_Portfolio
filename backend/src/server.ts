@@ -19,6 +19,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/categories", categoriesRoutes);
 
 app.get("/admin/me", requireAuth, (req, res) => {
   res.json({
