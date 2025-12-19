@@ -12,3 +12,7 @@ GET http://localhost:3001/categories
 
 ### Get works by category (Proyectos)
 GET http://localhost:3001/categories/proyectos/works
+
+### Protected route (without token)
+GET http://localhost:3001/admin/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc2NjE1Njk1MywiZXhwIjoxNzY2NzYxNzUzfQ.OYqNPelIaMQIAkj8W6I6fnhhnAPCFVdINhl0p1L6Wdw

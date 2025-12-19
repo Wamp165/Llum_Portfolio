@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.js";
-import categoriesRoutes from "./routes/categories.js";
+import authRoutes from "./routes/auth";
+import categoriesRoutes from "./routes/categories";
+import { requireAuth } from "./middleware/requireAuth";
+
 
 const app = express();
 
@@ -18,6 +20,13 @@ app.get("/health", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/categories", categoriesRoutes);
+
+app.get("/admin/me", requireAuth, (req, res) => {
+  res.json({
+    message: "You are authenticated",
+    userId: req.user?.id,
+  });
+});
 
 // Start HTTP server
 app.listen(3001, () => {
