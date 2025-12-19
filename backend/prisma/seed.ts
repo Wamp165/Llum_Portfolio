@@ -4,8 +4,12 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = "admin@llum.com";
-  const password = "change-me-now";
+  const email = process.env.ADMIN_EMAIL!;
+  const password = process.env.ADMIN_PASSWORD!;
+
+  if (!email || !password) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables");
+  }
 
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -19,7 +23,14 @@ async function main() {
     },
   });
 
-  console.log("Admin user created");
+  await prisma.category.createMany({
+    data: [
+      { name: "Proyectos", slug: "proyectos", order: 1 },
+      { name: "Stories", slug: "stories", order: 2 },
+      { name: "Commercial", slug: "commercial", order: 3 },
+    ],
+    skipDuplicates: true,
+  });
 }
 
 main()

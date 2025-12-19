@@ -38,6 +38,7 @@ model User {
 model Category {
   id          Int     @id @default(autoincrement())
   name        String
+  slug        String  @unique
   description String?
   order       Int     @default(0)
 
