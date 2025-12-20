@@ -28,6 +28,7 @@ model User {
   bio            String?
   homeBanner     String?
   profilePicture String?
+  contactEmail   String?
   instagram      String?
   substack       String?
   location       String?
