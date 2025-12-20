@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
+import { requireAuth } from "../middleware/requireAuth";
+import { slugify } from "../utils/slugify";
 
 const router = Router();
 
-// GET /categories
-router.get("/", async (_req, res) => {
+/**
+ * GET /categories
+ * Returns all categories (admin view)
+ */
+router.get("/", requireAuth, async (_req, res) => {
   const categories = await prisma.category.findMany({
     orderBy: { order: "asc" },
   });
@@ -12,34 +17,69 @@ router.get("/", async (_req, res) => {
   res.json(categories);
 });
 
-// GET /categories/:slug/works
-router.get("/:slug/works", async (req, res) => {
-  const { slug } = req.params;
+/**
+ * POST /categories
+ * Creates a new category (slug is generated automatically)
+ */
+router.post("/", requireAuth, async (req, res) => {
+  const { name, description, order } = req.body;
 
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    include: {
-      works: {
-        orderBy: { order: "asc" },
-        include: {
-          sections: {
-            orderBy: { order: "asc" },
-            include: {
-              images: {
-                orderBy: { order: "asc" },
-              },
-            },
-          },
-        },
-      },
+  if (!name) {
+    return res.status(400).json({ message: "Name is required" });
+  }
+
+  const slug = slugify(name);
+
+  const category = await prisma.category.create({
+    data: {
+      name,
+      slug,
+      description,
+      order: order ?? 0,
     },
   });
 
-  if (!category) {
-    return res.status(404).json({ message: "Category not found" });
+  res.status(201).json(category);
+});
+
+/**
+ * PATCH /categories/:id
+ * Updates a category (slug is regenerated if name changes)
+ */
+router.patch("/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, description, order } = req.body;
+
+  const data: any = {
+    description,
+    order,
+  };
+
+  if (name) {
+    data.name = name;
+    data.slug = slugify(name);
   }
 
-  res.json(category.works);
+  const category = await prisma.category.update({
+    where: { id },
+    data,
+  });
+
+  res.json(category);
+});
+
+/**
+ * DELETE /categories/:id
+ * Deletes a category
+ */
+router.delete("/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+
+  await prisma.category.delete({
+    where: { id },
+  });
+
+  res.status(204).send();
 });
 
 export default router;

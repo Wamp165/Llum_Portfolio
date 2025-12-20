@@ -3,7 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth";
 import categoriesRoutes from "./routes/categories";
 import { requireAuth } from "./middleware/requireAuth";
-
+import userRoutes  from "./routes/user";
 
 const app = express();
 
@@ -18,9 +18,10 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Register route handlers
 app.use("/auth", authRoutes);
 app.use("/categories", categoriesRoutes);
-
+app.use("/user", userRoutes );
 app.get("/admin/me", requireAuth, (req, res) => {
   res.json({
     message: "You are authenticated",
