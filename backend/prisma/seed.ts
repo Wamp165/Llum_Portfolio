@@ -17,17 +17,59 @@ async function main() {
     where: { email },
     update: {},
     create: {
-      name: "Admin",
+      id: 1,
+      name: "Zuzanna Basiukiewicz",
       email,
       passwordHash,
+      bio: "Photographer based in Warsaw, Poland.",
+      contactEmail: "basiutestemail@gmail.com",
+      instagram: "toiyashi",
+      location: "Warsaw, Poland",
+      substack: "https://basiu.substack.com/",
     },
   });
 
   await prisma.category.createMany({
     data: [
-      { name: "Proyectos", slug: "proyectos", order: 1 },
-      { name: "Stories", slug: "stories", order: 2 },
-      { name: "Commercial", slug: "commercial", order: 3 },
+      { id: 1, name: "Proyectos", slug: "proyectos", userId:1, order: 1, description: "Proyectos description" },
+      { id: 2, name: "Stories", slug: "stories", userId: 1, order: 2, description: "Stories description" },
+      { id: 3, name: "Commercial", slug: "commercial", userId: 1, order: 3, description: "Commercial description" },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.work.createMany({
+    data: [
+      { title: "Lofoten", categoryId: 1, order: 1, description: "Lofoten"},
+      { title: "Selfportrait", categoryId: 2, order: 1, description: "Selfportrait"},
+      { title: "Reflection", categoryId: 2, order: 2, description: "Reflection"},
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.workSection.createMany({
+    data: [
+      { workId: 1, type: "IMAGE_LEFT_TEXT_RIGHT", order: 1, text: "Lofoten Text" },
+      { workId: 1, type: "IMAGE_RIGHT_TEXT_LEFT", order: 2, text: "Lofoten Text 2" },
+      { workId: 1, type: "IMAGE_CENTER_TEXT_BELOW", order: 3, text: "Lofoten Text 3" },
+      { workId: 1, type: "IMAGE_ONLY", order: 4},
+      { workId: 1, type: "TEXT_ONLY", order: 5, text: "Lofoten Text 5" },
+      { workId: 1, type: "IMAGE_ONLY", order: 6 },
+      { workId: 1, type: "IMAGE_ONLY", order: 7},
+    ],
+    skipDuplicates: true,
+  });
+  await prisma.workSectionImage.createMany({
+    data: [
+      {workSectionId: 1, imageUrl: "", order: 0},
+      {workSectionId: 2, imageUrl: "", order: 0},
+      {workSectionId: 3, imageUrl: "", order: 0},
+      {workSectionId: 4, imageUrl: "", order: 0},
+      {workSectionId: 6, imageUrl: "", order: 1},
+      {workSectionId: 6, imageUrl: "", order: 2},
+      {workSectionId: 7, imageUrl: "", order: 3},
+      {workSectionId: 7, imageUrl: "", order: 1},
+      {workSectionId: 7, imageUrl: "", order: 2},
     ],
     skipDuplicates: true,
   });

@@ -27,12 +27,7 @@ router.post("/:workId/sections", requireAuth, async (req, res) => {
   const { type, text, order } = req.body;
 
   const section = await prisma.workSection.create({
-    data: {
-      workId,
-      type,
-      text,
-      order,
-    },
+    data: { workId, type, text, order },
   });
 
   res.status(201).json(section);

@@ -6,10 +6,26 @@ const router = Router();
 
 /**
  * GET /works
- * List all works (admin)
+ * List all works belonging to the authenticated user's categories
  */
-router.get("/", requireAuth, async (_req, res) => {
+router.get("/", requireAuth, async (req, res) => {
+  const categories = await prisma.category.findMany({
+    where: {
+      userId: req.user!.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const categoryIds = categories.map(c => c.id);
+
   const works = await prisma.work.findMany({
+    where: {
+      categoryId: {
+        in: categoryIds,
+      },
+    },
     orderBy: { order: "asc" },
     include: {
       category: true,
@@ -18,6 +34,7 @@ router.get("/", requireAuth, async (_req, res) => {
 
   res.json(works);
 });
+
 
 /**
  * POST /works
@@ -29,6 +46,17 @@ router.post("/", requireAuth, async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
+  const category = await prisma.category.findFirst({
+    where: {
+      id: categoryId,
+      userId: req.user!.id,
+    },
+  });
+
+  if (!category) {
+    return res.status(403).json({ message: "Invalid category" });
+  }
+
   const work = await prisma.work.create({
     data: {
       title,
@@ -36,7 +64,6 @@ router.post("/", requireAuth, async (req, res) => {
       banner,
       order: order ?? 0,
       categoryId,
-      userId: req.user!.id,
     },
   });
 
