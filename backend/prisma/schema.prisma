@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS ---
-
 enum WorkSectionType {
   IMAGE_LEFT_TEXT_RIGHT
   IMAGE_RIGHT_TEXT_LEFT
@@ -17,12 +15,10 @@ enum WorkSectionType {
   IMAGE_ONLY
 }
 
-// --- MODELS ---
-
 model User {
-  id             Int     @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   name           String
-  email          String  @unique
+  email          String     @unique
   passwordHash   String
 
   bio            String?
@@ -33,15 +29,18 @@ model User {
   substack       String?
   location       String?
 
-  works          Work[]
+  categories     Category[]
 }
 
 model Category {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  slug        String  @unique
+  slug        String   @unique
   description String?
-  order       Int     @default(0)
+  order       Int      @default(0)
+
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
 
   works       Work[]
 }
@@ -53,9 +52,6 @@ model Work {
   banner      String?
   order       Int      @default(0)
   createdAt   DateTime @default(now())
-
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
 
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])

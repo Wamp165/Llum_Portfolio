@@ -7,10 +7,11 @@ const router = Router();
 
 /**
  * GET /categories
- * Returns all categories (admin view)
+ * Returns all categories for the authenticated user (admin view)
  */
-router.get("/", requireAuth, async (_req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   const categories = await prisma.category.findMany({
+    where: { userId: req.user!.id },
     orderBy: { order: "asc" },
   });
 
@@ -19,7 +20,7 @@ router.get("/", requireAuth, async (_req, res) => {
 
 /**
  * POST /categories
- * Creates a new category (slug is generated automatically)
+ * Creates a new category for the authenticated user (slug is generated automatically)
  */
 router.post("/", requireAuth, async (req, res) => {
   const { name, description, order } = req.body;
@@ -36,6 +37,7 @@ router.post("/", requireAuth, async (req, res) => {
       slug,
       description,
       order: order ?? 0,
+      userId: req.user!.id,
     },
   });
 
@@ -44,7 +46,7 @@ router.post("/", requireAuth, async (req, res) => {
 
 /**
  * PATCH /categories/:id
- * Updates a category (slug is regenerated if name changes)
+ * Updates a category belonging to the authenticated user
  */
 router.patch("/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
@@ -70,7 +72,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
 
 /**
  * DELETE /categories/:id
- * Deletes a category
+ * Deletes a category belonging to the authenticated user
  */
 router.delete("/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);

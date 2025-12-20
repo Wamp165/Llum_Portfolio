@@ -23,7 +23,7 @@ router.post("/:sectionId/images", requireAuth, async (req, res) => {
 });
 
 /**
- * PATCH /images/:id
+ * PATCH /sections/images/:id
  */
 router.patch("/images/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
@@ -37,7 +37,7 @@ router.patch("/images/:id", requireAuth, async (req, res) => {
 });
 
 /**
- * DELETE /images/:id
+ * DELETE /sections/images/:id
  */
 router.delete("/images/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
@@ -45,5 +45,6 @@ router.delete("/images/:id", requireAuth, async (req, res) => {
   await prisma.workSectionImage.delete({ where: { id } });
   res.status(204).send();
 });
+
 
 export default router;

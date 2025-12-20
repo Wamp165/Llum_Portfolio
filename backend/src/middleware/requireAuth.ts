@@ -30,7 +30,7 @@ export function requireAuth(
     // Attach user info to the request (very important)
     req.user = { id: payload.userId };
 
-    next(); // ✅ allow request to continue
+    next(); // Allow request to continue
   } catch {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
