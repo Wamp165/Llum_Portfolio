@@ -66,7 +66,7 @@ model WorkSection {
   order     Int
 
   workId    Int
-  work      Work             @relation(fields: [workId], references: [id])
+  work      Work             @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   images    WorkSectionImage[]
 }
@@ -77,5 +77,5 @@ model WorkSectionImage {
   order         Int
 
   workSectionId Int
-  workSection   WorkSection @relation(fields: [workSectionId], references: [id])
+  workSection   WorkSection @relation(fields: [workSectionId], references: [id], onDelete: Cascade)
 }
