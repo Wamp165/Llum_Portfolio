@@ -5,10 +5,12 @@ CREATE TYPE "WorkSectionType" AS ENUM ('IMAGE_LEFT_TEXT_RIGHT', 'IMAGE_RIGHT_TEX
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
     "bio" TEXT,
     "homeBanner" TEXT,
     "profilePicture" TEXT,
-    "email" TEXT,
+    "contactEmail" TEXT,
     "instagram" TEXT,
     "substack" TEXT,
     "location" TEXT,
@@ -20,6 +22,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Category" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
     "description" TEXT,
     "order" INTEGER NOT NULL DEFAULT 0,
 
@@ -60,6 +63,12 @@ CREATE TABLE "WorkSectionImage" (
 
     CONSTRAINT "WorkSectionImage_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
 
 -- AddForeignKey
 ALTER TABLE "Work" ADD CONSTRAINT "Work_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
