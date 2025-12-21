@@ -6,6 +6,7 @@ import categoriesRoutes from "./routes/categories";
 import worksRoutes from "./routes/works";
 import workSectionsRoutes from "./routes/workSections";
 import workSectionImagesRoutes from "./routes/workSectionImages";
+import publicRoutes from "./routes/public";
 
 import userRoutes from "./routes/user";
 import { requireAuth } from "./middleware/requireAuth";
@@ -28,6 +29,9 @@ app.use("/categories", categoriesRoutes);
 app.use("/works", worksRoutes);
 app.use("/works", workSectionsRoutes);
 app.use("/sections", workSectionImagesRoutes);
+
+// Public resources
+app.use("/public", publicRoutes);
 
 // Simple auth check
 app.get("/admin/me", requireAuth, (req, res) => {
