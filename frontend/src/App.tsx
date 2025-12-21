@@ -6,12 +6,14 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Public
 import HomePage from "./pages/HomePage";
+import ContactPage from "./pages/ContactPage";
 
 function App() {
   return (
     <Routes>
       {/* ===== Public site ===== */}
       <Route path="/" element={<HomePage />} />
+      <Route path="/contact" element={<ContactPage />} />
 
       {/* ===== Admin ===== */}
       <Route path="/admin/login" element={<AdminLogin />} />
