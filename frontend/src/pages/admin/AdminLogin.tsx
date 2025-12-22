@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "http://localhost:3001";
+import { API_URL } from "../../config";
 
 function AdminLogin() {
   const navigate = useNavigate();
@@ -30,13 +29,9 @@ function AdminLogin() {
       }
 
       const data = await response.json();
-
-      // Save token
       localStorage.setItem("token", data.token);
-
-      // Redirect to admin dashboard
       navigate("/admin");
-    } catch (err) {
+    } catch {
       setError("Email or password is incorrect");
     } finally {
       setLoading(false);

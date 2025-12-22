@@ -1,7 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import { Navigate } from "react-router-dom";
-
-const API_URL = "http://localhost:3001";
+import { API_URL } from "../config";
 
 export default function RequireAuth({ children }: { children: JSX.Element }) {
   const [ok, setOk] = useState<boolean | null>(null);
@@ -17,7 +16,7 @@ export default function RequireAuth({ children }: { children: JSX.Element }) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }).then(res => setOk(res.ok));
+    }).then((res) => setOk(res.ok));
   }, []);
 
   if (ok === null) return null;

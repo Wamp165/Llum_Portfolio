@@ -17,6 +17,34 @@ Content-Type: application/json
 }
 
 ### ======================
+### USER
+### ======================
+
+### Get my profile (editable data)
+GET http://localhost:3001/public/user
+Authorization: {{token}}
+
+### Get my profile (editable data)
+GET http://localhost:3001/user/me
+Authorization: {{token}}
+
+### Update my profile
+PATCH http://localhost:3001/user/me
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Name",
+  "bio": "Updated bio text",
+  "homeBanner": "https://example.com/new-banner.jpg",
+  "profilePicture": "https://example.com/new-profile.jpg",
+  "contactEmail": "new@email.com",
+  "instagram": "@newinstagram",
+  "substack": "https://new.substack.com",
+  "location": "Berlin, Germany"
+}
+
+### ======================
 ### CATEGORIES
 ### ======================
 
