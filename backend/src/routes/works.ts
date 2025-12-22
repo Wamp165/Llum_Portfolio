@@ -15,9 +15,7 @@ const router = Router();
  * GET /categories/:categoryId/works
  * List all works for a category
  */
-router.get(
-  "/categories/:categoryId/works",
-  async (req, res) => {
+router.get("/categories/:categoryId/works", async (req, res) => {
     const { categoryId } = categoryIdParamSchema.parse(req.params);
 
     const category = await prisma.category.findUnique({
@@ -44,10 +42,7 @@ router.get(
  * POST /works
  * Create a new work
  */
-router.post(
-  "/works",
-  requireAuth,
-  async (req, res) => {
+router.post("/works", requireAuth, async (req, res) => {
     const { title, description, banner, categoryId, order } =
       createWorkSchema.parse(req.body);
 
@@ -81,10 +76,7 @@ router.post(
  * PATCH /works/:id
  * Update a work
  */
-router.patch(
-  "/works/:id",
-  requireAuth,
-  async (req, res) => {
+router.patch("/works/:id", requireAuth, async (req, res) => {
     const { id } = workIdParamSchema.parse(req.params);
     const { title, description, banner, order } =
       updateWorkSchema.parse(req.body);
@@ -118,10 +110,7 @@ router.patch(
  * DELETE /works/:id
  * Delete a work
  */
-router.delete(
-  "/works/:id",
-  requireAuth,
-  async (req, res) => {
+router.delete("/works/:id", requireAuth, async (req, res) => {
     const { id } = workIdParamSchema.parse(req.params);
 
     const work = await prisma.work.findUnique({
