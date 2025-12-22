@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 // Public
 import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
 
       {/* ===== Admin ===== */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin"   element={<RequireAuth><AdminDashboard /></RequireAuth>} />
     </Routes>
   );
 }
