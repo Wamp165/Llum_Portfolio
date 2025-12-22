@@ -77,7 +77,7 @@ ALTER TABLE "Category" ADD CONSTRAINT "Category_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "Work" ADD CONSTRAINT "Work_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WorkSection" ADD CONSTRAINT "WorkSection_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "WorkSection" ADD CONSTRAINT "WorkSection_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WorkSectionImage" ADD CONSTRAINT "WorkSectionImage_workSectionId_fkey" FOREIGN KEY ("workSectionId") REFERENCES "WorkSection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "WorkSectionImage" ADD CONSTRAINT "WorkSectionImage_workSectionId_fkey" FOREIGN KEY ("workSectionId") REFERENCES "WorkSection"("id") ON DELETE CASCADE ON UPDATE CASCADE;

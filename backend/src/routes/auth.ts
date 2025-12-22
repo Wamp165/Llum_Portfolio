@@ -14,8 +14,6 @@ const router = Router();
 
 // POST /auth/login
 router.post("/login", async (req, res) => {
-    console.log("JWT_SECRET:", process.env.JWT_SECRET);
-
   const { email, password } = LoginSchema.parse(req.body);
 
   const user = await prisma.user.findUnique({
