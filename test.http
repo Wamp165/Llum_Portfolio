@@ -1,0 +1,135 @@
+### ======================
+### AUTH
+### ======================
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc2NjQzMTI2MywiZXhwIjoxNzY3MDM2MDYzfQ.4ClaSFbtoXrWJRwtVR3wcrHA4r9y9FoNnaNW7VTB5Oo
+@userId = 1
+@categoryId = 1
+@workId = 4
+@sectionId = 12
+@imageId = 10
+@env = local
+### Login as admin
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+
+}
+
+### ======================
+### CATEGORIES
+### ======================
+
+### Get categories for user
+GET http://localhost:3001/users/{{userId}}/categories
+
+### Update category
+PATCH http://localhost:3001/categories/1
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Category Name 2",
+  "order": 1
+}
+
+
+### ======================
+### WORKS
+### ======================
+
+### Get works for category
+GET http://localhost:3001/categories/{{categoryId}}/works
+
+### Create work
+POST http://localhost:3001/works
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "title": "New Project",
+  "description": "New project description",
+  "banner": "https://example.com/banner.jpg",
+  "categoryId": {{categoryId}},
+  "order": 2
+}
+
+### Update work
+PATCH http://localhost:3001/works/{{workId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "title": "Updated Title",
+  "order": 3
+}
+
+### Delete work
+DELETE http://localhost:3001/works/{{workId}}
+Authorization: {{token}}
+
+
+### ======================
+### WORK SECTIONS
+### ======================
+
+### Get sections for work
+GET http://localhost:3001/works/{{workId}}/sections
+Authorization: {{token}}
+
+### Create section
+POST http://localhost:3001/works/{{workId}}/sections
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "type": "TEXT_ONLY",
+  "text": "New section text",
+  "order": 10
+}
+
+### Update section
+PATCH http://localhost:3001/works/sections/{{sectionId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "type": "IMAGE_LEFT_TEXT_RIGHT",
+  "text": "Updated section text",
+  "order": 5
+}
+
+### Delete section
+DELETE http://localhost:3001/works/sections/{{sectionId}}
+Authorization: {{token}}
+
+
+### ======================
+### SECTION IMAGES
+### ======================
+
+### Get images for section
+GET http://localhost:3001/sections/{{sectionId}}/images
+
+### Add image to section
+POST http://localhost:3001/sections/{{sectionId}}/images
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "imageUrl": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+  "order": 1
+}
+
+### Update image
+PATCH http://localhost:3001/sections/images/{{imageId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "order": 2
+}
+
+### Delete image
+DELETE http://localhost:3001/sections/images/{{imageId}}
+Authorization: {{token}}

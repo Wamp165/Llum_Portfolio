@@ -3,16 +3,20 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
 
+import * as z from "zod"; 
+ 
+const LoginSchema = z.object({ 
+  email: z.string(),
+  password: z.string()
+});
 
 const router = Router();
 
 // POST /auth/login
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Missing credentials" });
-  }
+  const { email, password } = LoginSchema.parse(req.body);
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -36,5 +40,6 @@ router.post("/login", async (req, res) => {
 
   res.json({ token });
 });
+
 
 export default router;

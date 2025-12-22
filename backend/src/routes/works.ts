@@ -1,97 +1,144 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
+import { Prisma } from "@prisma/client";
+import {
+  categoryIdParamSchema,
+  workIdParamSchema,
+  createWorkSchema,
+  updateWorkSchema,
+} from "../schemas/work.schema";
 
 const router = Router();
 
 /**
- * GET /works
- * List all works belonging to the authenticated user's categories
+ * GET /categories/:categoryId/works
+ * List all works for a category
  */
-router.get("/", requireAuth, async (req, res) => {
-  const categories = await prisma.category.findMany({
-    where: {
-      userId: req.user!.id,
-    },
-    select: {
-      id: true,
-    },
-  });
+router.get(
+  "/categories/:categoryId/works",
+  async (req, res) => {
+    const { categoryId } = categoryIdParamSchema.parse(req.params);
 
-  const categoryIds = categories.map(c => c.id);
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
 
-  const works = await prisma.work.findMany({
-    where: {
-      categoryId: {
-        in: categoryIds,
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const works = await prisma.work.findMany({
+      where: { categoryId },
+      orderBy: { order: "asc" },
+      include: {
+        category: true,
       },
-    },
-    orderBy: { order: "asc" },
-    include: {
-      category: true,
-    },
-  });
+    });
 
-  res.json(works);
-});
-
+    res.json(works);
+  }
+);
 
 /**
  * POST /works
+ * Create a new work
  */
-router.post("/", requireAuth, async (req, res) => {
-  const { title, description, categoryId, order, banner } = req.body;
+router.post(
+  "/works",
+  requireAuth,
+  async (req, res) => {
+    const { title, description, banner, categoryId, order } =
+      createWorkSchema.parse(req.body);
 
-  if (!title || !categoryId) {
-    return res.status(400).json({ message: "Missing required fields" });
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    if (category.userId !== req.user!.id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const work = await prisma.work.create({
+      data: {
+        title,
+        description,
+        banner,
+        order: order ?? 0,
+        categoryId,
+      },
+    });
+
+    res.status(201).json(work);
   }
-
-  const category = await prisma.category.findFirst({
-    where: {
-      id: categoryId,
-      userId: req.user!.id,
-    },
-  });
-
-  if (!category) {
-    return res.status(403).json({ message: "Invalid category" });
-  }
-
-  const work = await prisma.work.create({
-    data: {
-      title,
-      description,
-      banner,
-      order: order ?? 0,
-      categoryId,
-    },
-  });
-
-  res.status(201).json(work);
-});
+);
 
 /**
  * PATCH /works/:id
+ * Update a work
  */
-router.patch("/:id", requireAuth, async (req, res) => {
-  const id = Number(req.params.id);
+router.patch(
+  "/works/:id",
+  requireAuth,
+  async (req, res) => {
+    const { id } = workIdParamSchema.parse(req.params);
+    const { title, description, banner, order } =
+      updateWorkSchema.parse(req.body);
 
-  const work = await prisma.work.update({
-    where: { id },
-    data: req.body,
-  });
+    const existingWork = await prisma.work.findUnique({
+      where: { id },
+    });
 
-  res.json(work);
-});
+    if (!existingWork) {
+      return res.status(404).json({ message: "Work not found" });
+    }
+
+    const data: Prisma.WorkUpdateInput = {};
+
+    if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
+    if (banner !== undefined) data.banner = banner;
+    if (order !== undefined) data.order = order;
+
+    const work = await prisma.work.update({
+      where: { id },
+      data,
+    });
+
+    res.json(work);
+  }
+);
+
 
 /**
  * DELETE /works/:id
+ * Delete a work
  */
-router.delete("/:id", requireAuth, async (req, res) => {
-  const id = Number(req.params.id);
+router.delete(
+  "/works/:id",
+  requireAuth,
+  async (req, res) => {
+    const { id } = workIdParamSchema.parse(req.params);
 
-  await prisma.work.delete({ where: { id } });
-  res.status(204).send();
-});
+    const work = await prisma.work.findUnique({
+      where: { id },
+    });
+
+    if (!work) {
+      return res.status(404).json({ message: "Work not found" });
+    }
+
+    await prisma.work.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  }
+);
+
 
 export default router;

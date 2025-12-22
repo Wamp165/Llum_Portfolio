@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import * as z from "zod";
 
 import authRoutes from "./routes/auth";
 import categoriesRoutes from "./routes/categories";
@@ -25,8 +26,8 @@ app.use("/auth", authRoutes);
 
 // Admin / protected resources
 app.use("/user", userRoutes);
-app.use("/categories", categoriesRoutes);
-app.use("/works", worksRoutes);
+app.use("/", categoriesRoutes);
+app.use("/", worksRoutes);
 app.use("/works", workSectionsRoutes);
 app.use("/sections", workSectionImagesRoutes);
 
@@ -40,6 +41,14 @@ app.get("/admin/me", requireAuth, (req, res) => {
     userId: req.user!.id,
   });
 });
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  if (err instanceof z.ZodError) {
+    return res.status(400).json({ message: "Invalid request", errors: err.issues });
+  }
+  res.status(500).json({ message: "Internal server error" });
+})
 
 app.listen(3001, () => {
   console.log("Llum backend server running on http://localhost:3001");
