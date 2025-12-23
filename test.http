@@ -4,23 +4,24 @@
 @token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc2NjQzMTI2MywiZXhwIjoxNzY3MDM2MDYzfQ.4ClaSFbtoXrWJRwtVR3wcrHA4r9y9FoNnaNW7VTB5Oo
 @userId = 1
 @categoryId = 1
-@workId = 4
-@sectionId = 12
-@imageId = 10
+@workId = 1
+@sectionId = 1
+@imageId = 1
 @env = local
+
+
 ### Login as admin
 POST http://localhost:3001/auth/login
 Content-Type: application/json
 
 {
-
 }
 
 ### ======================
 ### USER
 ### ======================
 
-### Get my profile (editable data)
+### Get my profile (public data)
 GET http://localhost:3001/public/user
 Authorization: {{token}}
 
@@ -34,9 +35,9 @@ Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "name": "Updated Name",
+  "name": "Zuzanna Basiukiewicz",
   "bio": "Updated bio text",
-  "homeBanner": "https://example.com/new-banner.jpg",
+  "homeBanner": "https://res.cloudinary.com/dt0qtsury/image/upload/v1766251265/_8310282_1-kopia_hzncut.jpg",
   "profilePicture": "https://example.com/new-profile.jpg",
   "contactEmail": "new@email.com",
   "instagram": "@newinstagram",
@@ -57,7 +58,7 @@ Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "name": "Updated Category Name 2",
+  "name": "Projects",
   "order": 1
 }
 
