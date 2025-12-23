@@ -19,9 +19,9 @@ export default function Navbar({ name, categories }: NavbarProps) {
 
   return (
     <header className="w-full pt-10 pb-8">
-      <nav className="mx-auto max-w-[1200px] px-6 flex items-start justify-between">
+      <nav className="mx-auto max-w-[1100px] px-6 flex items-start justify-between">
         
-        {/* Brand */}
+        {/* Name */}
         <Link
           to="/"
           className="shrink-0 font-light tracking-[0.18em] leading-[1.4] text-[18px] -translate-y-2.5"
@@ -59,7 +59,6 @@ export default function Navbar({ name, categories }: NavbarProps) {
             Contact
           </NavLink>
         </div>
-
       </nav>
     </header>
   );
