@@ -46,12 +46,14 @@ model Category {
 }
 
 model Work {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  banner      String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  banner        String?
+  date          String?
+  introduction  String?
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
 
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
