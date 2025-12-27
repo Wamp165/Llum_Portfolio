@@ -9,22 +9,26 @@ export const workIdParamSchema = z.object({
 });
 
 /**
- * CREATE → description ES OBLIGATORIO
+ * CREATE
  */
 export const createWorkSchema = z.object({
   title: z.string().min(1).max(200),
-  description: z.string().min(1).max(1000), // ✅ REQUIRED
-  banner: z.string().url().optional(),
+  description: z.string().min(1).max(1000),
+  banner: z.string().url().optional().or(z.literal("")),
+  date: z.string().max(200).optional(),
+  introduction: z.string().max(5000).optional(),
   categoryId: z.coerce.number().int().positive(),
   order: z.number().int().min(0).optional(),
 });
 
 /**
- * UPDATE → description opcional, pero si viene es string
+ * UPDATE
  */
 export const updateWorkSchema = z.object({
   title: z.string().min(1).max(200).optional(),
-  description: z.string().min(1).max(1000).optional(), // ✅ OK
-  banner: z.string().url().optional(),
+  description: z.string().min(1).max(1000).optional(),
+  banner: z.string().url().optional().or(z.literal("")),
+  date: z.string().max(200).optional(),
+  introduction: z.string().max(5000).optional(),
   order: z.number().int().min(0).optional(),
 });
