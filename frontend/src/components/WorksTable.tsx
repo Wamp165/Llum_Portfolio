@@ -242,7 +242,7 @@ export default function WorksTable({
   }
 
   return (
-    <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">
+    <section className="border rounded-lg p-4 h-[300px] overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium">Works</h2>
 
