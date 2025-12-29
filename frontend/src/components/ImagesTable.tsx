@@ -2,8 +2,6 @@ import { useEffect, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
 
-/* ---------- Types ---------- */
-
 type ImageRow = {
   id: number;
   imageUrl: string;
@@ -15,20 +13,16 @@ type ImagesTableProps = {
   sectionId: number | null;
 };
 
-/* ---------- Component ---------- */
-
 export default function ImagesTable({
   sectionId,
 }: ImagesTableProps): JSX.Element {
   const [images, setImages] = useState<ImageRow[]>([]);
   const [saving, setSaving] = useState<boolean>(false);
 
-  /* Load images */
   useEffect(() => {
-    if (!sectionId) {
-      setImages([]);
-      return;
-    }
+    setImages([]);
+
+    if (!sectionId) return;
 
     const fetchImages = async (): Promise<void> => {
       const response: AxiosResponse<ImageRow[]> =
@@ -39,9 +33,9 @@ export default function ImagesTable({
     fetchImages();
   }, [sectionId]);
 
-  /* ---------- Helpers ---------- */
-
   const addImage = (): void => {
+    if (!sectionId) return;
+
     setImages((prev) => [
       ...prev,
       {
@@ -65,13 +59,14 @@ export default function ImagesTable({
   };
 
   const deleteImage = async (image: ImageRow): Promise<void> => {
+    if (!sectionId) return;
+
     if (!image.isNew) {
       await api.delete(`/sections/images/${image.id}`);
     }
+
     setImages((prev) => prev.filter((img) => img.id !== image.id));
   };
-
-  /* ---------- Save (single source of truth) ---------- */
 
   const saveImages = async (): Promise<void> => {
     if (!sectionId) return;
@@ -80,10 +75,7 @@ export default function ImagesTable({
 
     try {
       for (const image of images) {
-        // Do not allow empty URLs
-        if (image.imageUrl.trim() === "") {
-          continue;
-        }
+        if (image.imageUrl.trim() === "") continue;
 
         if (image.isNew) {
           await api.post(`/sections/${sectionId}/images`, {
@@ -105,8 +97,6 @@ export default function ImagesTable({
       setSaving(false);
     }
   };
-
-  /* ---------- Render ---------- */
 
   return (
     <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">

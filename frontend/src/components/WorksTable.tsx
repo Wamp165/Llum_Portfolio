@@ -18,6 +18,7 @@ type WorksTableProps = {
   categoryId: number | null;
   selectedWorkId: number | null;
   onViewWork: (workId: number) => void;
+  onWorkDeleted?: (workId: number) => void;
 };
 
 type NewWorkDraft = {
@@ -34,6 +35,7 @@ export default function WorksTable({
   categoryId,
   selectedWorkId,
   onViewWork,
+  onWorkDeleted,
 }: WorksTableProps): JSX.Element {
   const [works, setWorks] = useState<Work[]>([]);
   const [newDrafts, setNewDrafts] = useState<NewWorkDraft[]>([]);
@@ -120,9 +122,7 @@ export default function WorksTable({
     );
   };
 
-  const updateDraftField = <
-    K extends keyof Omit<NewWorkDraft, "clientId">
-  >(
+  const updateDraftField = <K extends keyof Omit<NewWorkDraft, "clientId">>(
     clientId: string,
     field: K,
     value: NewWorkDraft[K]
@@ -160,6 +160,7 @@ export default function WorksTable({
       await api.delete(`/works/${id}`);
       setWorks((prev) => prev.filter((w) => w.id !== id));
       baselineRef.current.delete(id);
+      onWorkDeleted?.(id);
     } catch {
       setError("Failed to delete work.");
     }
@@ -328,9 +329,7 @@ export default function WorksTable({
                   <input
                     value={work.date ?? ""}
                     className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "date", e.target.value)
-                    }
+                    onChange={(e) => updateField(work.id, "date", e.target.value)}
                   />
                 </td>
 

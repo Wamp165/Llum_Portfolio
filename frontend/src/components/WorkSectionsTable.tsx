@@ -1,8 +1,7 @@
+// WorkSectionsTable.tsx
 import { useEffect, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
-
-/* ---------- Types ---------- */
 
 export type WorkSectionType =
   | "IMAGE_LEFT_TEXT_RIGHT"
@@ -23,6 +22,7 @@ type WorkSectionsTableProps = {
   workId: number | null;
   selectedSectionId: number | null;
   onViewSection: (sectionId: number) => void;
+  onSectionDeleted?: (sectionId: number) => void;
 };
 
 const SECTION_TYPES: WorkSectionType[] = [
@@ -33,17 +33,15 @@ const SECTION_TYPES: WorkSectionType[] = [
   "IMAGE_ONLY",
 ];
 
-/* ---------- Component ---------- */
-
 export default function WorkSectionsTable({
   workId,
   selectedSectionId,
   onViewSection,
+  onSectionDeleted,
 }: WorkSectionsTableProps): JSX.Element {
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [saving, setSaving] = useState<boolean>(false);
 
-  /* Load sections */
   useEffect(() => {
     if (!workId) {
       setSections([]);
@@ -51,27 +49,23 @@ export default function WorkSectionsTable({
     }
 
     const fetchSections = async (): Promise<void> => {
-      const response: AxiosResponse<SectionRow[]> =
-        await api.get(`/works/${workId}/sections`);
+      const response: AxiosResponse<SectionRow[]> = await api.get(
+        `/works/${workId}/sections`
+      );
       setSections(response.data);
     };
 
     fetchSections();
   }, [workId]);
 
-  /* ---------- Helpers ---------- */
-
   const addSection = (): void => {
     setSections((prev) => {
-      const maxOrder =
-        prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
+      const maxOrder = prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
 
       return [
         ...prev,
         {
-          id: prev.length
-            ? Math.min(...prev.map((s) => s.id)) - 1
-            : -1,
+          id: prev.length ? Math.min(...prev.map((s) => s.id)) - 1 : -1,
           type: "TEXT_ONLY",
           text: "",
           order: maxOrder + 1,
@@ -85,9 +79,7 @@ export default function WorkSectionsTable({
     id: number,
     data: Partial<Pick<SectionRow, "order" | "type" | "text">>
   ): void => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...data } : s))
-    );
+    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
   };
 
   const deleteSection = async (section: SectionRow): Promise<void> => {
@@ -95,9 +87,8 @@ export default function WorkSectionsTable({
       await api.delete(`/works/sections/${section.id}`);
     }
     setSections((prev) => prev.filter((s) => s.id !== section.id));
+    if (!section.isNew) onSectionDeleted?.(section.id);
   };
-
-  /* ---------- Save ---------- */
 
   const saveSections = async (): Promise<void> => {
     if (!workId) return;
@@ -121,15 +112,14 @@ export default function WorkSectionsTable({
         }
       }
 
-      const refreshed: AxiosResponse<SectionRow[]> =
-        await api.get(`/works/${workId}/sections`);
+      const refreshed: AxiosResponse<SectionRow[]> = await api.get(
+        `/works/${workId}/sections`
+      );
       setSections(refreshed.data);
     } finally {
       setSaving(false);
     }
   };
-
-  /* ---------- Render ---------- */
 
   return (
     <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">
@@ -150,9 +140,7 @@ export default function WorkSectionsTable({
       </div>
 
       {!workId ? (
-        <div className="text-sm text-gray-400">
-          Select a work to view sections
-        </div>
+        <div className="text-sm text-gray-400">Select a work to view sections</div>
       ) : (
         <table className="w-full text-sm border-collapse">
           <thead>
@@ -171,11 +159,7 @@ export default function WorkSectionsTable({
               .map((section) => (
                 <tr
                   key={section.id}
-                  className={`border-b ${
-                    selectedSectionId === section.id
-                      ? "bg-gray-50"
-                      : ""
-                  }`}
+                  className={`border-b ${selectedSectionId === section.id ? "bg-gray-50" : ""}`}
                 >
                   <td>
                     <input
@@ -183,9 +167,7 @@ export default function WorkSectionsTable({
                       value={section.order}
                       className="w-14 bg-transparent outline-none"
                       onChange={(e) =>
-                        updateLocal(section.id, {
-                          order: Number(e.target.value),
-                        })
+                        updateLocal(section.id, { order: Number(e.target.value) })
                       }
                     />
                   </td>
@@ -212,9 +194,7 @@ export default function WorkSectionsTable({
                     <input
                       value={section.text ?? ""}
                       className="w-full bg-transparent outline-none"
-                      onChange={(e) =>
-                        updateLocal(section.id, { text: e.target.value })
-                      }
+                      onChange={(e) => updateLocal(section.id, { text: e.target.value })}
                     />
                   </td>
 
