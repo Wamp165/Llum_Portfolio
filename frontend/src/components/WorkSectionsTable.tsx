@@ -11,14 +11,11 @@ export type WorkSectionType =
   | "TEXT_ONLY"
   | "IMAGE_ONLY";
 
-type WorkSection = {
+type SectionRow = {
   id: number;
   type: WorkSectionType;
   text?: string | null;
   order: number;
-};
-
-type DraftSection = WorkSection & {
   isNew?: boolean;
 };
 
@@ -43,52 +40,61 @@ export default function WorkSectionsTable({
   selectedSectionId,
   onViewSection,
 }: WorkSectionsTableProps): JSX.Element {
-  const [drafts, setDrafts] = useState<DraftSection[]>([]);
+  const [sections, setSections] = useState<SectionRow[]>([]);
   const [saving, setSaving] = useState<boolean>(false);
 
-  /* Load sections when work changes */
+  /* Load sections */
   useEffect(() => {
     if (!workId) {
-      setDrafts([]);
+      setSections([]);
       return;
     }
 
     const fetchSections = async (): Promise<void> => {
-      const response: AxiosResponse<WorkSection[]> =
+      const response: AxiosResponse<SectionRow[]> =
         await api.get(`/works/${workId}/sections`);
-      setDrafts(response.data);
+      setSections(response.data);
     };
 
     fetchSections();
   }, [workId]);
 
-  /* ---------- Draft helpers ---------- */
+  /* ---------- Helpers ---------- */
 
-  const updateDraft = (
+  const addSection = (): void => {
+    setSections((prev) => {
+      const maxOrder =
+        prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
+
+      return [
+        ...prev,
+        {
+          id: prev.length
+            ? Math.min(...prev.map((s) => s.id)) - 1
+            : -1,
+          type: "TEXT_ONLY",
+          text: "",
+          order: maxOrder + 1,
+          isNew: true,
+        },
+      ];
+    });
+  };
+
+  const updateLocal = (
     id: number,
-    data: Partial<Pick<WorkSection, "order" | "type" | "text">>
+    data: Partial<Pick<SectionRow, "order" | "type" | "text">>
   ): void => {
-    setDrafts((prev) =>
+    setSections((prev) =>
       prev.map((s) => (s.id === id ? { ...s, ...data } : s))
     );
   };
 
-  const addSection = (): void => {
-    setDrafts((prev) => [
-      ...prev,
-      {
-        id: Date.now(), // temporary id
-        type: "TEXT_ONLY",
-        text: "",
-        order: prev.length,
-        isNew: true,
-      },
-    ]);
-  };
-
-  const deleteSection = async (id: number): Promise<void> => {
-    await api.delete(`/works/sections/${id}`);
-    setDrafts((prev) => prev.filter((s) => s.id !== id));
+  const deleteSection = async (section: SectionRow): Promise<void> => {
+    if (!section.isNew) {
+      await api.delete(`/works/sections/${section.id}`);
+    }
+    setSections((prev) => prev.filter((s) => s.id !== section.id));
   };
 
   /* ---------- Save ---------- */
@@ -99,7 +105,7 @@ export default function WorkSectionsTable({
     setSaving(true);
 
     try {
-      for (const section of drafts) {
+      for (const section of sections) {
         if (section.isNew) {
           await api.post(`/works/${workId}/sections`, {
             type: section.type,
@@ -115,10 +121,9 @@ export default function WorkSectionsTable({
         }
       }
 
-      const refreshed: AxiosResponse<WorkSection[]> =
+      const refreshed: AxiosResponse<SectionRow[]> =
         await api.get(`/works/${workId}/sections`);
-
-      setDrafts(refreshed.data);
+      setSections(refreshed.data);
     } finally {
       setSaving(false);
     }
@@ -160,7 +165,7 @@ export default function WorkSectionsTable({
           </thead>
 
           <tbody>
-            {drafts
+            {sections
               .slice()
               .sort((a, b) => a.order - b.order)
               .map((section) => (
@@ -178,7 +183,7 @@ export default function WorkSectionsTable({
                       value={section.order}
                       className="w-14 bg-transparent outline-none"
                       onChange={(e) =>
-                        updateDraft(section.id, {
+                        updateLocal(section.id, {
                           order: Number(e.target.value),
                         })
                       }
@@ -190,7 +195,7 @@ export default function WorkSectionsTable({
                       value={section.type}
                       className="bg-transparent outline-none"
                       onChange={(e) =>
-                        updateDraft(section.id, {
+                        updateLocal(section.id, {
                           type: e.target.value as WorkSectionType,
                         })
                       }
@@ -208,22 +213,22 @@ export default function WorkSectionsTable({
                       value={section.text ?? ""}
                       className="w-full bg-transparent outline-none"
                       onChange={(e) =>
-                        updateDraft(section.id, {
-                          text: e.target.value,
-                        })
+                        updateLocal(section.id, { text: e.target.value })
                       }
                     />
                   </td>
 
                   <td className="text-right space-x-2">
+                    {!section.isNew && (
+                      <button
+                        onClick={() => onViewSection(section.id)}
+                        className="text-xs underline"
+                      >
+                        View
+                      </button>
+                    )}
                     <button
-                      onClick={() => onViewSection(section.id)}
-                      className="text-xs underline"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => deleteSection(section.id)}
+                      onClick={() => deleteSection(section)}
                       className="text-xs text-red-600 underline"
                     >
                       Delete

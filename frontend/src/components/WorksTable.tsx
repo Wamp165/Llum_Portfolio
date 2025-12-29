@@ -2,9 +2,6 @@ import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
 
-/**
- * Work entity as returned by the API
- */
 type Work = {
   id: number;
   title: string;
@@ -23,35 +20,38 @@ type WorksTableProps = {
   onViewWork: (workId: number) => void;
 };
 
-/**
- * Editable Works table (metadata only)
- */
+type NewWorkDraft = {
+  clientId: string;
+  title: string;
+  description: string;
+  introduction: string;
+  date: string;
+  banner: string;
+  order: number;
+};
+
 export default function WorksTable({
   categoryId,
   selectedWorkId,
   onViewWork,
 }: WorksTableProps): JSX.Element {
   const [works, setWorks] = useState<Work[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [newDrafts, setNewDrafts] = useState<NewWorkDraft[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Baseline snapshot used to detect changes
-   */
   const baselineRef = useRef<Map<number, Work>>(new Map());
 
-  /**
-   * Fetch works when category changes
-   */
   useEffect(() => {
     if (!categoryId) {
       setWorks([]);
+      setNewDrafts([]);
       baselineRef.current.clear();
       return;
     }
 
-    const fetchWorks = async (): Promise<void> => {
+    const fetchWorks = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -61,11 +61,10 @@ export default function WorksTable({
         );
 
         setWorks(response.data);
+        setNewDrafts([]);
 
         const baseline = new Map<number, Work>();
-        response.data.forEach((work) =>
-          baseline.set(work.id, work)
-        );
+        response.data.forEach((w) => baseline.set(w.id, w));
         baselineRef.current = baseline;
       } catch {
         setError("Failed to load works.");
@@ -77,28 +76,27 @@ export default function WorksTable({
     fetchWorks();
   }, [categoryId]);
 
-  /**
-   * Sorted works by explicit order
-   */
-  const sortedWorks = useMemo<Work[]>(() => {
-    return works.slice().sort((a, b) => a.order - b.order);
-  }, [works]);
+  const sortedWorks = useMemo(
+    () => works.slice().sort((a, b) => a.order - b.order),
+    [works]
+  );
 
-  /**
-   * Detect if there are unsaved changes
-   */
-  const isDirty = useMemo<boolean>(() => {
-    const baseline = baselineRef.current;
+  const sortedDrafts = useMemo(
+    () => newDrafts.slice().sort((a, b) => a.order - b.order),
+    [newDrafts]
+  );
+
+  const isDirty = useMemo(() => {
+    if (newDrafts.length > 0) return true;
 
     for (const work of works) {
-      const base = baseline.get(work.id);
+      const base = baselineRef.current.get(work.id);
       if (!base) return true;
 
       if (
         work.title !== base.title ||
         work.description !== base.description ||
-        (work.introduction ?? "") !==
-          (base.introduction ?? "") ||
+        (work.introduction ?? "") !== (base.introduction ?? "") ||
         (work.date ?? "") !== (base.date ?? "") ||
         (work.banner ?? "") !== (base.banner ?? "") ||
         work.order !== base.order
@@ -108,114 +106,126 @@ export default function WorksTable({
     }
 
     return false;
-  }, [works]);
+  }, [works, newDrafts]);
 
-  /**
-   * Update local state only
-   */
-  const updateField = <K extends keyof Omit<Work, "id" | "createdAt" | "categoryId">>(
+  const updateField = <
+    K extends keyof Omit<Work, "id" | "createdAt" | "categoryId">
+  >(
     id: number,
     field: K,
     value: Work[K]
-  ): void => {
+  ) => {
     setWorks((prev) =>
-      prev.map((work) =>
-        work.id === id ? { ...work, [field]: value } : work
-      )
+      prev.map((w) => (w.id === id ? { ...w, [field]: value } : w))
     );
   };
 
-  /**
-   * Create a new work
-   */
-  const addWork = async (): Promise<void> => {
-    if (!categoryId) return;
-
-    setError(null);
-
-    const nextOrder =
-      works.length === 0
-        ? 0
-        : Math.max(...works.map((w) => w.order)) + 1;
-
-    try {
-      const response: AxiosResponse<Work> =
-        await api.post("/works", {
-          title: "New work",
-          description: "Description",
-          introduction: "",
-          date: "",
-          banner: "",
-          categoryId,
-          order: nextOrder,
-        });
-
-      setWorks((prev) => [...prev, response.data]);
-      baselineRef.current.set(response.data.id, response.data);
-    } catch {
-      setError("Failed to create work.");
-    }
+  const updateDraftField = <
+    K extends keyof Omit<NewWorkDraft, "clientId">
+  >(
+    clientId: string,
+    field: K,
+    value: NewWorkDraft[K]
+  ) => {
+    setNewDrafts((prev) =>
+      prev.map((d) => (d.clientId === clientId ? { ...d, [field]: value } : d))
+    );
   };
 
-  /**
-   * Delete a work
-   */
-  const deleteWork = async (workId: number): Promise<void> => {
-    setError(null);
+  const addWork = () => {
+    if (!categoryId) return;
 
+    const maxOrder = Math.max(
+      -1,
+      ...works.map((w) => w.order),
+      ...newDrafts.map((d) => d.order)
+    );
+
+    setNewDrafts((prev) => [
+      ...prev,
+      {
+        clientId: crypto.randomUUID(),
+        title: "New work",
+        description: "Description",
+        introduction: "",
+        date: "",
+        banner: "",
+        order: maxOrder + 1,
+      },
+    ]);
+  };
+
+  const deleteWork = async (id: number) => {
     try {
-      await api.delete(`/works/${workId}`);
-      setWorks((prev) =>
-        prev.filter((work) => work.id !== workId)
-      );
-      baselineRef.current.delete(workId);
+      await api.delete(`/works/${id}`);
+      setWorks((prev) => prev.filter((w) => w.id !== id));
+      baselineRef.current.delete(id);
     } catch {
       setError("Failed to delete work.");
     }
   };
 
-  /**
-   * Persist all modified works
-   */
-  const saveAllWorks = async (): Promise<void> => {
+  const deleteDraft = (clientId: string) => {
+    setNewDrafts((prev) => prev.filter((d) => d.clientId !== clientId));
+  };
+
+  const saveAllWorks = async () => {
+    if (!categoryId) return;
+
     setIsSaving(true);
     setError(null);
 
     try {
-      await Promise.all(
-        works.map((work) => {
-          const baseline = baselineRef.current.get(work.id);
+      if (newDrafts.length > 0) {
+        const created = await Promise.all(
+          newDrafts.map(async (d) => {
+            const res: AxiosResponse<Work> = await api.post("/works", {
+              title: d.title,
+              description: d.description,
+              introduction: d.introduction || undefined,
+              date: d.date || undefined,
+              banner: d.banner || undefined,
+              order: d.order,
+              categoryId,
+            });
+            return res.data;
+          })
+        );
 
+        setWorks((prev) => [...prev, ...created]);
+        created.forEach((w) => baselineRef.current.set(w.id, w));
+        setNewDrafts([]);
+      }
+
+      await Promise.all(
+        works.map((w) => {
+          const b = baselineRef.current.get(w.id);
           if (
-            baseline &&
-            work.title === baseline.title &&
-            work.description === baseline.description &&
-            (work.introduction ?? "") ===
-              (baseline.introduction ?? "") &&
-            (work.date ?? "") === (baseline.date ?? "") &&
-            (work.banner ?? "") ===
-              (baseline.banner ?? "") &&
-            work.order === baseline.order
+            b &&
+            w.title === b.title &&
+            w.description === b.description &&
+            (w.introduction ?? "") === (b.introduction ?? "") &&
+            (w.date ?? "") === (b.date ?? "") &&
+            (w.banner ?? "") === (b.banner ?? "") &&
+            w.order === b.order
           ) {
             return Promise.resolve();
           }
 
-          return api.patch(`/works/${work.id}`, {
-            title: work.title,
-            description: work.description,
-            introduction: work.introduction,
-            date: work.date,
-            banner: work.banner,
-            order: work.order,
+          return api.patch(`/works/${w.id}`, {
+            title: w.title,
+            description: w.description,
+            introduction: w.introduction,
+            date: w.date,
+            banner: w.banner,
+            order: w.order,
           });
         })
       );
 
-      const refreshedBaseline = new Map<number, Work>();
-      works.forEach((work) =>
-        refreshedBaseline.set(work.id, work)
-      );
-      baselineRef.current = refreshedBaseline;
+      const refreshed = new Map<number, Work>();
+      works.forEach((w) => refreshed.set(w.id, w));
+      baselineRef.current = refreshed;
     } catch {
       setError("Failed to save changes.");
     } finally {
@@ -232,7 +242,7 @@ export default function WorksTable({
   }
 
   return (
-    <section className="border rounded-lg p-4 overflow-auto">
+    <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium">Works</h2>
 
@@ -256,11 +266,7 @@ export default function WorksTable({
         </div>
       </div>
 
-      {error && (
-        <div className="mb-2 text-xs text-red-600">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-2 text-xs text-red-600">{error}</div>}
 
       {isLoading ? (
         <div className="text-sm">Loading works…</div>
@@ -274,7 +280,7 @@ export default function WorksTable({
               <th className="text-left py-1 w-24">Date</th>
               <th className="text-left py-1">Banner</th>
               <th className="text-left py-1 w-16">Order</th>
-              <th className="w-24" />
+              <th className="w-28" />
             </tr>
           </thead>
 
@@ -283,9 +289,7 @@ export default function WorksTable({
               <tr
                 key={work.id}
                 className={`border-b last:border-b-0 ${
-                  selectedWorkId === work.id
-                    ? "bg-gray-50"
-                    : ""
+                  selectedWorkId === work.id ? "bg-gray-50" : ""
                 }`}
               >
                 <td className="py-1 pr-2">
@@ -293,11 +297,7 @@ export default function WorksTable({
                     value={work.title}
                     className="w-full bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "title",
-                        e.target.value
-                      )
+                      updateField(work.id, "title", e.target.value)
                     }
                   />
                 </td>
@@ -308,11 +308,7 @@ export default function WorksTable({
                     value={work.description}
                     className="w-full resize-none bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "description",
-                        e.target.value
-                      )
+                      updateField(work.id, "description", e.target.value)
                     }
                   />
                 </td>
@@ -323,11 +319,7 @@ export default function WorksTable({
                     value={work.introduction ?? ""}
                     className="w-full resize-none bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "introduction",
-                        e.target.value
-                      )
+                      updateField(work.id, "introduction", e.target.value)
                     }
                   />
                 </td>
@@ -337,11 +329,7 @@ export default function WorksTable({
                     value={work.date ?? ""}
                     className="w-full bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "date",
-                        e.target.value
-                      )
+                      updateField(work.id, "date", e.target.value)
                     }
                   />
                 </td>
@@ -351,11 +339,7 @@ export default function WorksTable({
                     value={work.banner ?? ""}
                     className="w-full bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "banner",
-                        e.target.value
-                      )
+                      updateField(work.id, "banner", e.target.value)
                     }
                   />
                 </td>
@@ -366,11 +350,7 @@ export default function WorksTable({
                     value={work.order}
                     className="w-full bg-transparent outline-none"
                     onChange={(e) =>
-                      updateField(
-                        work.id,
-                        "order",
-                        Number(e.target.value)
-                      )
+                      updateField(work.id, "order", Number(e.target.value))
                     }
                   />
                 </td>
@@ -383,9 +363,99 @@ export default function WorksTable({
                   >
                     View
                   </button>
+
                   <button
                     type="button"
                     onClick={() => deleteWork(work.id)}
+                    className="text-xs text-red-600 underline underline-offset-4"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {sortedDrafts.map((draft) => (
+              <tr key={draft.clientId} className="border-b last:border-b-0">
+                <td className="py-1 pr-2">
+                  <input
+                    value={draft.title}
+                    className="w-full bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(draft.clientId, "title", e.target.value)
+                    }
+                  />
+                </td>
+
+                <td className="py-1 pr-2">
+                  <textarea
+                    rows={2}
+                    value={draft.description}
+                    className="w-full resize-none bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(
+                        draft.clientId,
+                        "description",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td className="py-1 pr-2">
+                  <textarea
+                    rows={2}
+                    value={draft.introduction}
+                    className="w-full resize-none bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(
+                        draft.clientId,
+                        "introduction",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td className="py-1 pr-2">
+                  <input
+                    value={draft.date}
+                    className="w-full bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(draft.clientId, "date", e.target.value)
+                    }
+                  />
+                </td>
+
+                <td className="py-1 pr-2">
+                  <input
+                    value={draft.banner}
+                    className="w-full bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(draft.clientId, "banner", e.target.value)
+                    }
+                  />
+                </td>
+
+                <td className="py-1 pr-2">
+                  <input
+                    type="number"
+                    value={draft.order}
+                    className="w-full bg-transparent outline-none"
+                    onChange={(e) =>
+                      updateDraftField(
+                        draft.clientId,
+                        "order",
+                        Number(e.target.value)
+                      )
+                    }
+                  />
+                </td>
+
+                <td className="py-1 text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => deleteDraft(draft.clientId)}
                     className="text-xs text-red-600 underline underline-offset-4"
                   >
                     Delete

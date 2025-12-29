@@ -4,13 +4,10 @@ import type { AxiosResponse } from "axios";
 
 /* ---------- Types ---------- */
 
-type WorkSectionImage = {
+type ImageRow = {
   id: number;
   imageUrl: string;
   order: number;
-};
-
-type DraftImage = WorkSectionImage & {
   isNew?: boolean;
 };
 
@@ -23,41 +20,34 @@ type ImagesTableProps = {
 export default function ImagesTable({
   sectionId,
 }: ImagesTableProps): JSX.Element {
-  const [drafts, setDrafts] = useState<DraftImage[]>([]);
+  const [images, setImages] = useState<ImageRow[]>([]);
   const [saving, setSaving] = useState<boolean>(false);
 
-  /* Load images when section changes */
+  /* Load images */
   useEffect(() => {
     if (!sectionId) {
-      setDrafts([]);
+      setImages([]);
       return;
     }
 
     const fetchImages = async (): Promise<void> => {
-      const response: AxiosResponse<WorkSectionImage[]> =
+      const response: AxiosResponse<ImageRow[]> =
         await api.get(`/sections/${sectionId}/images`);
-      setDrafts(response.data);
+      setImages(response.data);
     };
 
     fetchImages();
   }, [sectionId]);
 
-  /* ---------- Draft helpers ---------- */
-
-  const updateDraft = (
-    id: number,
-    data: Partial<Pick<WorkSectionImage, "imageUrl" | "order">>
-  ): void => {
-    setDrafts((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, ...data } : img))
-    );
-  };
+  /* ---------- Helpers ---------- */
 
   const addImage = (): void => {
-    setDrafts((prev) => [
+    setImages((prev) => [
       ...prev,
       {
-        id: Date.now(), // temporary id
+        id: prev.length
+          ? Math.min(...prev.map((i) => i.id)) - 1
+          : -1,
         imageUrl: "",
         order: prev.length,
         isNew: true,
@@ -65,12 +55,23 @@ export default function ImagesTable({
     ]);
   };
 
-  const deleteImage = async (id: number): Promise<void> => {
-    await api.delete(`/sections/images/${id}`);
-    setDrafts((prev) => prev.filter((img) => img.id !== id));
+  const updateLocal = (
+    id: number,
+    data: Partial<Pick<ImageRow, "imageUrl" | "order">>
+  ): void => {
+    setImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, ...data } : img))
+    );
   };
 
-  /* ---------- Save ---------- */
+  const deleteImage = async (image: ImageRow): Promise<void> => {
+    if (!image.isNew) {
+      await api.delete(`/sections/images/${image.id}`);
+    }
+    setImages((prev) => prev.filter((img) => img.id !== image.id));
+  };
+
+  /* ---------- Save (single source of truth) ---------- */
 
   const saveImages = async (): Promise<void> => {
     if (!sectionId) return;
@@ -78,7 +79,12 @@ export default function ImagesTable({
     setSaving(true);
 
     try {
-      for (const image of drafts) {
+      for (const image of images) {
+        // Do not allow empty URLs
+        if (image.imageUrl.trim() === "") {
+          continue;
+        }
+
         if (image.isNew) {
           await api.post(`/sections/${sectionId}/images`, {
             imageUrl: image.imageUrl,
@@ -92,10 +98,9 @@ export default function ImagesTable({
         }
       }
 
-      const refreshed: AxiosResponse<WorkSectionImage[]> =
+      const refreshed: AxiosResponse<ImageRow[]> =
         await api.get(`/sections/${sectionId}/images`);
-
-      setDrafts(refreshed.data);
+      setImages(refreshed.data);
     } finally {
       setSaving(false);
     }
@@ -140,7 +145,7 @@ export default function ImagesTable({
           </thead>
 
           <tbody>
-            {drafts
+            {images
               .slice()
               .sort((a, b) => a.order - b.order)
               .map((img) => (
@@ -151,7 +156,7 @@ export default function ImagesTable({
                       value={img.order}
                       className="w-14 bg-transparent outline-none"
                       onChange={(e) =>
-                        updateDraft(img.id, {
+                        updateLocal(img.id, {
                           order: Number(e.target.value),
                         })
                       }
@@ -161,9 +166,10 @@ export default function ImagesTable({
                   <td>
                     <input
                       value={img.imageUrl}
+                      placeholder="https://..."
                       className="w-full bg-transparent outline-none"
                       onChange={(e) =>
-                        updateDraft(img.id, {
+                        updateLocal(img.id, {
                           imageUrl: e.target.value,
                         })
                       }
@@ -171,14 +177,12 @@ export default function ImagesTable({
                   </td>
 
                   <td className="text-right">
-                    {!img.isNew && (
-                      <button
-                        onClick={() => deleteImage(img.id)}
-                        className="text-xs text-red-600 underline"
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <button
+                      onClick={() => deleteImage(img)}
+                      className="text-xs text-red-600 underline"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
