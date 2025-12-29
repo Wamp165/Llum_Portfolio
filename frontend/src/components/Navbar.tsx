@@ -18,9 +18,8 @@ export default function Navbar({ name, categories }: NavbarProps) {
   const lastName = rest.join(" ");
 
   return (
-    <header className="w-full pt-10 pb-8">
-      <nav className="mx-auto max-w-[1100px] px-6 flex items-start justify-between">
-        
+    <header className="pt-8 pb-10">
+      <nav className="flex items-start justify-between">
         {/* Name */}
         <Link
           to="/"
