@@ -43,7 +43,7 @@ export default function ImagesTable({
           ? Math.min(...prev.map((i) => i.id)) - 1
           : -1,
         imageUrl: "",
-        order: prev.length,
+        order: prev.length + 1,
         isNew: true,
       },
     ]);

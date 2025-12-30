@@ -51,7 +51,7 @@ export default function HomePage() {
         <Navbar name={user.name} categories={navCategories} />
 
         {user.homeBanner && (
-          <section className="mt-6 mb-16">
+          <section className="mb-16">
             <img
               src={user.homeBanner}
               alt={`${user.name} banner`}

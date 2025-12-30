@@ -23,7 +23,7 @@ export default function Navbar({ name, categories }: NavbarProps) {
         {/* Name */}
         <Link
           to="/"
-          className="shrink-0 font-light tracking-[0.18em] leading-[1.4] text-[18px] -translate-y-2.5"
+          className="shrink-0 font-light tracking-[0.18em] leading-[1.4] text-[18px]"
         >
           <div>{firstName}</div>
           <div>{lastName}</div>
@@ -31,7 +31,7 @@ export default function Navbar({ name, categories }: NavbarProps) {
         </Link>
 
         {/* Menu */}
-        <div className="flex flex-wrap justify-end gap-x-36 gap-y-3 text-[17px] font-light">
+        <div className="flex flex-wrap justify-end gap-x-36 gap-y-3 text-[17px] font-light translate-y-2.5">
           {categories.map((c) => (
             <NavLink
               key={c.id}
@@ -39,7 +39,7 @@ export default function Navbar({ name, categories }: NavbarProps) {
               className={({ isActive }) =>
                 isActive
                   ? "text-black font-medium"
-                  : "text-neutral-400 hover:text-black/60 transition"
+                  : "text-neutral-700 hover:text-black/60 transition"
               }
             >
               {c.name}
@@ -52,7 +52,7 @@ export default function Navbar({ name, categories }: NavbarProps) {
             className={({ isActive }) =>
               isActive
                 ? "text-black font-medium"
-                : "text-neutral-400 hover:text-black/60 transition"
+                : "text-neutral-700 hover:text-black/60 transition"
             }
           >
             Contact
