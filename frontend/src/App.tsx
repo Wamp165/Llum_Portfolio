@@ -9,6 +9,7 @@ import RequireAuth from "./components/RequireAuth";
 import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
 import WorksPage from "./pages/WorksPage";
+import WorkDetailsPage from "./pages/WorkDetailsPage";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/:categorySlug" element={<WorksPage />} />
+      <Route path="/work/:workId" element={<WorkDetailsPage />} />
 
       {/* ===== Admin ===== */}
       <Route path="/admin/login" element={<AdminLogin />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import type { CategoryNavItem } from "../components/Navbar";
 import { API_URL } from "../config";
@@ -33,12 +33,14 @@ export default function WorksPage() {
 
   useEffect(() => {
     async function loadWorks() {
-      // Load public user
+      if (!categorySlug) return;
+
+      // Public user
       const userRes = await fetch(`${API_URL}/public/user`);
       const userData: PublicUser = await userRes.json();
       setUser(userData);
 
-      // Load categories
+      // Categories
       const categoriesRes = await fetch(
         `${API_URL}/users/${userData.id}/categories`
       );
@@ -46,20 +48,20 @@ export default function WorksPage() {
       setCategories(categoriesData);
 
       // Resolve category by slug
-      const foundCategory = categoriesData.find(
+      const category = categoriesData.find(
         (c) => c.slug === categorySlug
       );
 
-      if (!foundCategory) {
+      if (!category) {
         setLoading(false);
         return;
       }
 
-      setCurrentCategory(foundCategory);
+      setCurrentCategory(category);
 
-      // Load works for category
+      // Works
       const worksRes = await fetch(
-        `${API_URL}/categories/${foundCategory.id}/works`
+        `${API_URL}/categories/${category.id}/works`
       );
       const worksData: Work[] = await worksRes.json();
       setWorks(worksData);
@@ -85,8 +87,12 @@ export default function WorksPage() {
 
         <section className="space-y-24">
           {works.map((work) => (
-            <div key={work.id}>
-              <div className="grid grid-cols-1 gap-16 md:grid-cols-2 items-start">
+            <Link
+              key={work.id}
+              to={`/work/${work.id}`}
+              className="block group"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
                 {/* Image */}
                 <div>
                   {work.banner && (
@@ -99,8 +105,8 @@ export default function WorksPage() {
                 </div>
 
                 {/* Text */}
-                <div className="text-center">
-                  <h2 className="mb-6 text-sm font-semibold">
+                <div>
+                  <h2 className="mb-6 text-sm font-semibold group-hover:underline">
                     {work.title}
                   </h2>
 
@@ -112,7 +118,7 @@ export default function WorksPage() {
 
               {/* Divider */}
               <div className="mt-20 h-px w-full bg-black/20" />
-            </div>
+            </Link>
           ))}
         </section>
       </div>

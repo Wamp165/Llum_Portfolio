@@ -46,6 +46,37 @@ router.get("/categories/:categoryId/works", async (req, res) => {
 });
 
 /**
+ * GET /works/:id
+ * Get the information for a specific work
+ */
+router.get("/works/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "Invalid work id" });
+  }
+
+  const work = await prisma.work.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      banner: true,
+      date: true,
+      introduction: true,
+      categoryId: true,
+    },
+  });
+
+  if (!work) {
+    return res.status(404).json({ message: "Work not found" });
+  }
+
+  res.json(work);
+});
+
+
+/**
  * POST /works
  * Create a new work
  */
