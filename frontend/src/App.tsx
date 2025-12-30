@@ -8,6 +8,7 @@ import RequireAuth from "./components/RequireAuth";
 // Public
 import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
+import WorksPage from "./pages/WorksPage";
 
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
       {/* ===== Public site ===== */}
       <Route path="/" element={<HomePage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/:categorySlug" element={<WorksPage />} />
+
       {/* ===== Admin ===== */}
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin"   element={<RequireAuth><AdminDashboard /></RequireAuth>} />

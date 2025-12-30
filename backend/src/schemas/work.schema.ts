@@ -13,13 +13,14 @@ export const workIdParamSchema = z.object({
  */
 export const createWorkSchema = z.object({
   title: z.string().min(1).max(200),
-  description: z.string().min(1).max(1000),
+  description: z.string().max(1000).optional().or(z.literal("")),
   banner: z.string().url().optional().or(z.literal("")),
   date: z.string().max(200).optional(),
   introduction: z.string().max(5000).optional(),
   categoryId: z.coerce.number().int().positive(),
   order: z.number().int().min(0).optional(),
 });
+
 
 /**
  * UPDATE
