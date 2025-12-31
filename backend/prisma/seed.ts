@@ -23,7 +23,7 @@ async function main() {
       passwordHash,
       bio: "Photographer based in Gdanks, Poland.",
       contactEmail: "basiuzuza@gmail.com",
-      instagram: "@toiyashi",
+      instagram: "toiyashi",
       location: "Open to work anywhere in Europe and beyond.",
       substack: "toiyashi.substack.com",
       homeBanner: "https://res.cloudinary.com/dt0qtsury/image/upload/v1766251265/_8310282_1-kopia_hzncut.jpg",

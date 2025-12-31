@@ -94,12 +94,12 @@ export default function WorksPage() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
                 {/* Image */}
-                <div>
+                <div className="w-full">
                   {work.banner && (
                     <img
                       src={work.banner}
                       alt={work.title}
-                      className="w-full h-auto"
+                      className="w-full h-auto max-h-[520px] object-contain object-left"
                     />
                   )}
                 </div>

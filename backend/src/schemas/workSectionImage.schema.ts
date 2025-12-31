@@ -9,8 +9,8 @@ export const imageIdParamSchema = z.object({
 });
 
 export const createWorkSectionImageSchema = z.object({
-  imageUrl: z.string().min(1), // Prisma: String (no necesariamente url)
-  order: z.number().int().min(0).optional(), // Prisma: Int (sin default) -> lo ponemos default en router
+  imageUrl: z.string().min(1),
+  order: z.number().int().min(0).optional(),
 });
 
 export const updateWorkSectionImageSchema = z.object({

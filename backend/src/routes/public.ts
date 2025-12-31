@@ -6,7 +6,6 @@ const router = Router();
 /**
  * GET /public/user
  * Returns the public profile for the single portfolio owner.
- * Assumes only one user exists (MVP).
  */
 router.get("/user", async (_req, res) => {
   const user = await prisma.user.findFirst({

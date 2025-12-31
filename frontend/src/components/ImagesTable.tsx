@@ -1,6 +1,8 @@
 import { useEffect, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
+import ImagePreviewModal from "./ImagePreviewModal";
+import PreviewableUrlInput from "./PreviewableUrlInput";
 
 type ImageRow = {
   id: number;
@@ -17,23 +19,33 @@ export default function ImagesTable({
   sectionId,
 }: ImagesTableProps): JSX.Element {
   const [images, setImages] = useState<ImageRow[]>([]);
-  const [saving, setSaving] = useState<boolean>(false);
+  const [saving, setSaving] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setImages([]);
 
     if (!sectionId) return;
 
-    const fetchImages = async (): Promise<void> => {
-      const response: AxiosResponse<ImageRow[]> =
+    const fetchImages = async () => {
+      const res: AxiosResponse<ImageRow[]> =
         await api.get(`/sections/${sectionId}/images`);
-      setImages(response.data);
+      setImages(res.data);
     };
 
     fetchImages();
   }, [sectionId]);
 
-  const addImage = (): void => {
+  const updateLocal = (
+    id: number,
+    data: Partial<Pick<ImageRow, "imageUrl" | "order">>
+  ) => {
+    setImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, ...data } : img))
+    );
+  };
+
+  const addImage = () => {
     if (!sectionId) return;
 
     setImages((prev) => [
@@ -49,44 +61,29 @@ export default function ImagesTable({
     ]);
   };
 
-  const updateLocal = (
-    id: number,
-    data: Partial<Pick<ImageRow, "imageUrl" | "order">>
-  ): void => {
-    setImages((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, ...data } : img))
-    );
-  };
-
-  const deleteImage = async (image: ImageRow): Promise<void> => {
+  const deleteImage = async (image: ImageRow) => {
     if (!sectionId) return;
 
     if (!image.isNew) {
       await api.delete(`/sections/images/${image.id}`);
     }
 
-    setImages((prev) => prev.filter((img) => img.id !== image.id));
+    setImages((prev) => prev.filter((i) => i.id !== image.id));
   };
 
-  const saveImages = async (): Promise<void> => {
+  const saveImages = async () => {
     if (!sectionId) return;
 
     setSaving(true);
 
     try {
       for (const image of images) {
-        if (image.imageUrl.trim() === "") continue;
+        if (!image.imageUrl.trim()) continue;
 
         if (image.isNew) {
-          await api.post(`/sections/${sectionId}/images`, {
-            imageUrl: image.imageUrl,
-            order: image.order,
-          });
+          await api.post(`/sections/${sectionId}/images`, image);
         } else {
-          await api.patch(`/sections/images/${image.id}`, {
-            imageUrl: image.imageUrl,
-            order: image.order,
-          });
+          await api.patch(`/sections/images/${image.id}`, image);
         }
       }
 
@@ -103,16 +100,12 @@ export default function ImagesTable({
       <div className="flex justify-between mb-2">
         <h3 className="text-sm font-medium">Images</h3>
         <div className="space-x-3">
-          <button
-            onClick={addImage}
-            disabled={!sectionId}
-            className="text-xs underline disabled:opacity-50"
-          >
+          <button onClick={addImage} className="text-xs underline">
             Add
           </button>
           <button
             onClick={saveImages}
-            disabled={!sectionId || saving}
+            disabled={saving}
             className="text-xs underline disabled:opacity-50"
           >
             Save
@@ -125,15 +118,14 @@ export default function ImagesTable({
           Select a section to view images
         </div>
       ) : (
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-gray-500">
               <th className="w-16 text-left">Order</th>
               <th className="text-left">Image URL</th>
-              <th className="w-20 text-right">Actions</th>
+              <th className="w-20" />
             </tr>
           </thead>
-
           <tbody>
             {images
               .slice()
@@ -154,15 +146,12 @@ export default function ImagesTable({
                   </td>
 
                   <td>
-                    <input
+                    <PreviewableUrlInput
                       value={img.imageUrl}
-                      placeholder="https://..."
-                      className="w-full bg-transparent outline-none"
-                      onChange={(e) =>
-                        updateLocal(img.id, {
-                          imageUrl: e.target.value,
-                        })
+                      onChange={(v) =>
+                        updateLocal(img.id, { imageUrl: v })
                       }
+                      onPreview={setPreviewUrl}
                     />
                   </td>
 
@@ -178,6 +167,13 @@ export default function ImagesTable({
               ))}
           </tbody>
         </table>
+      )}
+
+      {previewUrl && (
+        <ImagePreviewModal
+          imageUrl={previewUrl}
+          onClose={() => setPreviewUrl(null)}
+        />
       )}
     </section>
   );

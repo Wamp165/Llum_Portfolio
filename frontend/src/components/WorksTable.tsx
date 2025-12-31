@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
+import ImagePreviewModal from "./ImagePreviewModal";
+import PreviewableUrlInput from "./PreviewableUrlInput";
 
 type Work = {
   id: number;
@@ -42,6 +44,9 @@ export default function WorksTable({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Banner preview modal state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const baselineRef = useRef<Map<number, Work>>(new Map());
 
@@ -329,17 +334,17 @@ export default function WorksTable({
                   <input
                     value={work.date ?? ""}
                     className="w-full bg-transparent outline-none"
-                    onChange={(e) => updateField(work.id, "date", e.target.value)}
+                    onChange={(e) =>
+                      updateField(work.id, "date", e.target.value)
+                    }
                   />
                 </td>
 
                 <td className="py-1 pr-2">
-                  <input
+                  <PreviewableUrlInput
                     value={work.banner ?? ""}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "banner", e.target.value)
-                    }
+                    onChange={(v) => updateField(work.id, "banner", v)}
+                    onPreview={setPreviewUrl}
                   />
                 </td>
 
@@ -427,12 +432,12 @@ export default function WorksTable({
                 </td>
 
                 <td className="py-1 pr-2">
-                  <input
+                  <PreviewableUrlInput
                     value={draft.banner}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(draft.clientId, "banner", e.target.value)
+                    onChange={(v) =>
+                      updateDraftField(draft.clientId, "banner", v)
                     }
+                    onPreview={setPreviewUrl}
                   />
                 </td>
 
@@ -464,6 +469,13 @@ export default function WorksTable({
             ))}
           </tbody>
         </table>
+      )}
+
+      {previewUrl && (
+        <ImagePreviewModal
+          imageUrl={previewUrl}
+          onClose={() => setPreviewUrl(null)}
+        />
       )}
     </section>
   );
