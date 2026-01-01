@@ -15,44 +15,48 @@ export default function AdminDashboard(): JSX.Element {
   );
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-[420px_1fr] grid-rows-[auto_1fr] gap-6">
-        <UserInfoTable />
+    <div className="p-4 md:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
+        <div className="flex flex-col gap-6">
+          <UserInfoTable />
 
-        <WorksTable
-          categoryId={selectedCategoryId}
-          selectedWorkId={selectedWorkId}
-          onViewWork={(workId) => {
-            setSelectedWorkId(workId);
-            setSelectedSectionId(null);
-          }}
-          onWorkDeleted={(workId) => {
-            setSelectedWorkId((prev) => (prev === workId ? null : prev));
-            setSelectedSectionId(null);
-          }}
-        />
+          <CategoriesTable
+            onViewCategory={(category) => {
+              setSelectedCategoryId(category.id);
+              setSelectedWorkId(null);
+              setSelectedSectionId(null);
+            }}
+          />
+        </div>
 
-        <CategoriesTable
-          onViewCategory={(category) => {
-            setSelectedCategoryId(category.id);
-            setSelectedWorkId(null);
-            setSelectedSectionId(null);
-          }}
-        />
-
-        <div className="grid grid-cols-[1fr_1fr] gap-6">
-          <SectionsTable
-            workId={selectedWorkId}
-            selectedSectionId={selectedSectionId}
-            onViewSection={(sectionId) => setSelectedSectionId(sectionId)}
-            onSectionDeleted={(sectionId) => {
-              setSelectedSectionId((prev) =>
-                prev === sectionId ? null : prev
-              );
+        <div className="flex flex-col gap-6">
+          <WorksTable
+            categoryId={selectedCategoryId}
+            selectedWorkId={selectedWorkId}
+            onViewWork={(workId) => {
+              setSelectedWorkId(workId);
+              setSelectedSectionId(null);
+            }}
+            onWorkDeleted={(workId) => {
+              setSelectedWorkId((prev) => (prev === workId ? null : prev));
+              setSelectedSectionId(null);
             }}
           />
 
-          <ImagesTable sectionId={selectedSectionId} />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <SectionsTable
+              workId={selectedWorkId}
+              selectedSectionId={selectedSectionId}
+              onViewSection={(sectionId) => setSelectedSectionId(sectionId)}
+              onSectionDeleted={(sectionId) => {
+                setSelectedSectionId((prev) =>
+                  prev === sectionId ? null : prev
+                );
+              }}
+            />
+
+            <ImagesTable sectionId={selectedSectionId} />
+          </div>
         </div>
       </div>
     </div>
