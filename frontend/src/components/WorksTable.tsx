@@ -35,6 +35,7 @@ export default function WorksTable({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const baselineRef = useRef<Map<number, WorkRow>>(new Map());
 
   // Fetch works
@@ -110,18 +111,13 @@ export default function WorksTable({
     );
   };
 
-  // Add work (ID negativo)
+  // Add work
   const addWork = () => {
     if (!categoryId) return;
 
     setWorks((prev) => {
-      const minId = prev.length
-        ? Math.min(...prev.map((w) => w.id))
-        : 0;
-
-      const maxOrder = prev.length
-        ? Math.max(...prev.map((w) => w.order))
-        : -1;
+      const minId = prev.length ? Math.min(...prev.map((w) => w.id)) : 0;
+      const maxOrder = prev.length ? Math.max(...prev.map((w) => w.order)) : -1;
 
       return [
         ...prev,
@@ -139,7 +135,7 @@ export default function WorksTable({
     });
   };
 
-  // Delete
+  // Delete work
   const deleteWork = async (work: WorkRow) => {
     try {
       if (!work.isNew) {
@@ -203,7 +199,6 @@ export default function WorksTable({
       );
 
       setWorks(refreshed.data);
-
       baselineRef.current.clear();
       refreshed.data.forEach((w) => baselineRef.current.set(w.id, w));
     } catch {
@@ -213,7 +208,6 @@ export default function WorksTable({
     }
   };
 
-  // Render
   if (!categoryId) {
     return (
       <section className="border rounded-lg p-4 text-sm text-gray-400">
@@ -223,8 +217,9 @@ export default function WorksTable({
   }
 
   return (
-    <section className="border rounded-lg p-4 h-[300px] overflow-y-auto">
-      <div className="flex items-center justify-between mb-3">
+    <section className="border rounded-lg p-4 h-[300px] flex flex-col">
+      {/* Header fijo (NO scrollea) */}
+      <div className="flex items-center justify-between mb-3 shrink-0">
         <h2 className="text-sm font-medium">Works</h2>
 
         <div className="flex items-center gap-4">
@@ -247,116 +242,121 @@ export default function WorksTable({
         </div>
       </div>
 
-      {error && <div className="mb-2 text-xs text-red-600">{error}</div>}
+      {error && (
+        <div className="mb-2 text-xs text-red-600 shrink-0">{error}</div>
+      )}
 
       {isLoading ? (
         <div className="text-sm">Loading works…</div>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-gray-500">
-              <th className="text-left py-1">Title</th>
-              <th className="text-left py-1">Description</th>
-              <th className="text-left py-1">Introduction</th>
-              <th className="text-left py-1 w-24">Date</th>
-              <th className="text-left py-1">Banner</th>
-              <th className="text-left py-1 w-16">Order</th>
-              <th className="w-28" />
-            </tr>
-          </thead>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full text-sm border-collapse">
+            {/* Column headers fijos usando sticky */}
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b text-gray-500">
+                <th className="text-left py-1">Title</th>
+                <th className="text-left py-1">Description</th>
+                <th className="text-left py-1">Introduction</th>
+                <th className="text-left py-1 w-24">Date</th>
+                <th className="text-left py-1">Banner</th>
+                <th className="text-left py-1 w-16">Order</th>
+                <th className="w-28" />
+              </tr>
+            </thead>
 
-          <tbody>
-            {sortedWorks.map((work) => (
-              <tr
-                key={work.id}
-                className={`border-b last:border-b-0 ${
-                  selectedWorkId === work.id ? "bg-gray-50" : ""
-                }`}
-              >
-                <td className="py-1 pr-2">
-                  <input
-                    value={work.title}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "title", e.target.value)
-                    }
-                  />
-                </td>
+            <tbody>
+              {sortedWorks.map((work) => (
+                <tr
+                  key={work.id}
+                  className={`border-b last:border-b-0 ${
+                    selectedWorkId === work.id ? "bg-gray-50" : ""
+                  }`}
+                >
+                  <td className="py-1 pr-2">
+                    <input
+                      value={work.title}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "title", e.target.value)
+                      }
+                    />
+                  </td>
 
-                <td className="py-1 pr-2">
-                  <textarea
-                    rows={2}
-                    value={work.description}
-                    className="w-full resize-none bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "description", e.target.value)
-                    }
-                  />
-                </td>
+                  <td className="py-1 pr-2">
+                    <textarea
+                      rows={2}
+                      value={work.description}
+                      className="w-full resize-none bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "description", e.target.value)
+                      }
+                    />
+                  </td>
 
-                <td className="py-1 pr-2">
-                  <textarea
-                    rows={2}
-                    value={work.introduction ?? ""}
-                    className="w-full resize-none bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "introduction", e.target.value)
-                    }
-                  />
-                </td>
+                  <td className="py-1 pr-2">
+                    <textarea
+                      rows={2}
+                      value={work.introduction ?? ""}
+                      className="w-full resize-none bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "introduction", e.target.value)
+                      }
+                    />
+                  </td>
 
-                <td className="py-1 pr-2">
-                  <input
-                    value={work.date ?? ""}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "date", e.target.value)
-                    }
-                  />
-                </td>
+                  <td className="py-1 pr-2">
+                    <input
+                      value={work.date ?? ""}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "date", e.target.value)
+                      }
+                    />
+                  </td>
 
-                <td className="py-1 pr-2">
-                  <PreviewableUrlInput
-                    value={work.banner ?? ""}
-                    onChange={(v) => updateField(work.id, "banner", v)}
-                    onPreview={setPreviewUrl}
-                  />
-                </td>
+                  <td className="py-1 pr-2">
+                    <PreviewableUrlInput
+                      value={work.banner ?? ""}
+                      onChange={(v) => updateField(work.id, "banner", v)}
+                      onPreview={setPreviewUrl}
+                    />
+                  </td>
 
-                <td className="py-1 pr-2">
-                  <input
-                    type="number"
-                    value={work.order}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateField(work.id, "order", Number(e.target.value))
-                    }
-                  />
-                </td>
+                  <td className="py-1 pr-2">
+                    <input
+                      type="number"
+                      value={work.order}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "order", Number(e.target.value))
+                      }
+                    />
+                  </td>
 
-                <td className="py-1 text-right whitespace-nowrap">
-                  {!work.isNew && (
+                  <td className="py-1 text-right whitespace-nowrap">
+                    {!work.isNew && (
+                      <button
+                        type="button"
+                        onClick={() => onViewWork(work.id)}
+                        className="text-xs underline underline-offset-4 mr-3"
+                      >
+                        View
+                      </button>
+                    )}
+
                     <button
                       type="button"
-                      onClick={() => onViewWork(work.id)}
-                      className="text-xs underline underline-offset-4 mr-3"
+                      onClick={() => deleteWork(work)}
+                      className="text-xs text-red-600 underline underline-offset-4"
                     >
-                      View
+                      Delete
                     </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => deleteWork(work)}
-                    className="text-xs text-red-600 underline underline-offset-4"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {previewUrl && (

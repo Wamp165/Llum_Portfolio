@@ -51,9 +51,7 @@ export default function ImagesTable({
     setImages((prev) => [
       ...prev,
       {
-        id: prev.length
-          ? Math.min(...prev.map((i) => i.id)) - 1
-          : -1,
+        id: prev.length ? Math.min(...prev.map((i) => i.id)) - 1 : -1,
         imageUrl: "",
         order: prev.length + 1,
         isNew: true,
@@ -96,8 +94,8 @@ export default function ImagesTable({
   };
 
   return (
-    <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">
-      <div className="flex justify-between mb-2">
+    <section className="border rounded-lg p-4 h-[420px] flex flex-col">
+      <div className="flex justify-between mb-2 shrink-0">
         <h3 className="text-sm font-medium">Images</h3>
         <div className="space-x-3">
           <button onClick={addImage} className="text-xs underline">
@@ -118,55 +116,57 @@ export default function ImagesTable({
           Select a section to view images
         </div>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-gray-500">
-              <th className="w-16 text-left">Order</th>
-              <th className="text-left">Image URL</th>
-              <th className="w-20" />
-            </tr>
-          </thead>
-          <tbody>
-            {images
-              .slice()
-              .sort((a, b) => a.order - b.order)
-              .map((img) => (
-                <tr key={img.id} className="border-b">
-                  <td>
-                    <input
-                      type="number"
-                      value={img.order}
-                      className="w-14 bg-transparent outline-none"
-                      onChange={(e) =>
-                        updateLocal(img.id, {
-                          order: Number(e.target.value),
-                        })
-                      }
-                    />
-                  </td>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b text-gray-500">
+                <th className="w-16 text-left py-1">Order</th>
+                <th className="text-left py-1">Image URL</th>
+                <th className="w-20" />
+              </tr>
+            </thead>
+            <tbody>
+              {images
+                .slice()
+                .sort((a, b) => a.order - b.order)
+                .map((img) => (
+                  <tr key={img.id} className="border-b last:border-b-0">
+                    <td className="py-1">
+                      <input
+                        type="number"
+                        value={img.order}
+                        className="w-14 bg-transparent outline-none"
+                        onChange={(e) =>
+                          updateLocal(img.id, {
+                            order: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </td>
 
-                  <td>
-                    <PreviewableUrlInput
-                      value={img.imageUrl}
-                      onChange={(v) =>
-                        updateLocal(img.id, { imageUrl: v })
-                      }
-                      onPreview={setPreviewUrl}
-                    />
-                  </td>
+                    <td className="py-1">
+                      <PreviewableUrlInput
+                        value={img.imageUrl}
+                        onChange={(v) =>
+                          updateLocal(img.id, { imageUrl: v })
+                        }
+                        onPreview={setPreviewUrl}
+                      />
+                    </td>
 
-                  <td className="text-right">
-                    <button
-                      onClick={() => deleteImage(img)}
-                      className="text-xs text-red-600 underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+                    <td className="py-1 text-right">
+                      <button
+                        onClick={() => deleteImage(img)}
+                        className="text-xs text-red-600 underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {previewUrl && (

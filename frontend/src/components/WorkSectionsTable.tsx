@@ -60,12 +60,15 @@ export default function WorkSectionsTable({
 
   const addSection = (): void => {
     setSections((prev) => {
-      const maxOrder = prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
+      const maxOrder =
+        prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
+
+      const minId = prev.length > 0 ? Math.min(...prev.map((s) => s.id)) : 0;
 
       return [
         ...prev,
         {
-          id: prev.length ? Math.min(...prev.map((s) => s.id)) - 1 : -1,
+          id: minId - 1,
           type: "TEXT_ONLY",
           text: "",
           order: maxOrder + 1,
@@ -79,15 +82,18 @@ export default function WorkSectionsTable({
     id: number,
     data: Partial<Pick<SectionRow, "order" | "type" | "text">>
   ): void => {
-    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+    setSections((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...data } : s))
+    );
   };
 
   const deleteSection = async (section: SectionRow): Promise<void> => {
     if (!section.isNew) {
       await api.delete(`/works/sections/${section.id}`);
+      onSectionDeleted?.(section.id);
     }
+
     setSections((prev) => prev.filter((s) => s.id !== section.id));
-    if (!section.isNew) onSectionDeleted?.(section.id);
   };
 
   const saveSections = async (): Promise<void> => {
@@ -122,102 +128,117 @@ export default function WorkSectionsTable({
   };
 
   return (
-    <section className="border rounded-lg p-4 h-[420px] overflow-y-auto">
-      <div className="flex justify-between mb-2">
+    <section className="border rounded-lg p-4 h-[420px] flex flex-col">
+      {/* Header fijo */}
+      <div className="flex justify-between mb-2 shrink-0">
         <h3 className="text-sm font-medium">Sections</h3>
+
         <div className="space-x-3">
           <button onClick={addSection} className="text-xs underline">
             Add
           </button>
+
           <button
             onClick={saveSections}
             disabled={saving}
             className="text-xs underline disabled:opacity-50"
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
 
       {!workId ? (
-        <div className="text-sm text-gray-400">Select a work to view sections</div>
+        <div className="text-sm text-gray-400">
+          Select a work to view sections
+        </div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b text-gray-500">
-              <th className="w-16 text-left">Order</th>
-              <th className="w-56 text-left">Type</th>
-              <th className="text-left">Text</th>
-              <th className="w-32 text-right">Actions</th>
-            </tr>
-          </thead>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full text-sm border-collapse">
+            {/* Cabecera fija */}
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b text-gray-500">
+                <th className="w-16 text-left py-1">Order</th>
+                <th className="w-56 text-left py-1">Type</th>
+                <th className="text-left py-1">Text</th>
+                <th className="w-32 text-right py-1">Actions</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {sections
-              .slice()
-              .sort((a, b) => a.order - b.order)
-              .map((section) => (
-                <tr
-                  key={section.id}
-                  className={`border-b ${selectedSectionId === section.id ? "bg-gray-50" : ""}`}
-                >
-                  <td>
-                    <input
-                      type="number"
-                      value={section.order}
-                      className="w-14 bg-transparent outline-none"
-                      onChange={(e) =>
-                        updateLocal(section.id, { order: Number(e.target.value) })
-                      }
-                    />
-                  </td>
+            <tbody>
+              {sections
+                .slice()
+                .sort((a, b) => a.order - b.order)
+                .map((section) => (
+                  <tr
+                    key={section.id}
+                    className={`border-b last:border-b-0 ${
+                      selectedSectionId === section.id ? "bg-gray-50" : ""
+                    }`}
+                  >
+                    <td className="py-1">
+                      <input
+                        type="number"
+                        value={section.order}
+                        className="w-14 bg-transparent outline-none"
+                        onChange={(e) =>
+                          updateLocal(section.id, {
+                            order: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </td>
 
-                  <td>
-                    <select
-                      value={section.type}
-                      className="bg-transparent outline-none"
-                      onChange={(e) =>
-                        updateLocal(section.id, {
-                          type: e.target.value as WorkSectionType,
-                        })
-                      }
-                    >
-                      {SECTION_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-
-                  <td>
-                    <input
-                      value={section.text ?? ""}
-                      className="w-full bg-transparent outline-none"
-                      onChange={(e) => updateLocal(section.id, { text: e.target.value })}
-                    />
-                  </td>
-
-                  <td className="text-right space-x-2">
-                    {!section.isNew && (
-                      <button
-                        onClick={() => onViewSection(section.id)}
-                        className="text-xs underline"
+                    <td className="py-1">
+                      <select
+                        value={section.type}
+                        className="bg-transparent outline-none"
+                        onChange={(e) =>
+                          updateLocal(section.id, {
+                            type: e.target.value as WorkSectionType,
+                          })
+                        }
                       >
-                        View
+                        {SECTION_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    <td className="py-1">
+                      <input
+                        value={section.text ?? ""}
+                        className="w-full bg-transparent outline-none"
+                        onChange={(e) =>
+                          updateLocal(section.id, { text: e.target.value })
+                        }
+                      />
+                    </td>
+
+                    <td className="py-1 text-right space-x-2 whitespace-nowrap">
+                      {!section.isNew && (
+                        <button
+                          onClick={() => onViewSection(section.id)}
+                          className="text-xs underline"
+                        >
+                          View
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => deleteSection(section)}
+                        className="text-xs text-red-600 underline"
+                      >
+                        Delete
                       </button>
-                    )}
-                    <button
-                      onClick={() => deleteSection(section)}
-                      className="text-xs text-red-600 underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );
