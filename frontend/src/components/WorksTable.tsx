@@ -4,16 +4,17 @@ import type { AxiosResponse } from "axios";
 import ImagePreviewModal from "./ImagePreviewModal";
 import PreviewableUrlInput from "./PreviewableUrlInput";
 
-type Work = {
-  id: number;
+type WorkRow = {
+  id: number; // >0 backend, <0 draft
   title: string;
   description: string;
   introduction?: string | null;
   date?: string | null;
   banner?: string | null;
   order: number;
-  createdAt: string;
-  categoryId: number;
+  createdAt?: string;
+  categoryId?: number;
+  isNew?: boolean;
 };
 
 type WorksTableProps = {
@@ -23,37 +24,23 @@ type WorksTableProps = {
   onWorkDeleted?: (workId: number) => void;
 };
 
-type NewWorkDraft = {
-  clientId: string;
-  title: string;
-  description: string;
-  introduction: string;
-  date: string;
-  banner: string;
-  order: number;
-};
-
 export default function WorksTable({
   categoryId,
   selectedWorkId,
   onViewWork,
   onWorkDeleted,
 }: WorksTableProps): JSX.Element {
-  const [works, setWorks] = useState<Work[]>([]);
-  const [newDrafts, setNewDrafts] = useState<NewWorkDraft[]>([]);
+  const [works, setWorks] = useState<WorkRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Banner preview modal state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const baselineRef = useRef<Map<number, WorkRow>>(new Map());
 
-  const baselineRef = useRef<Map<number, Work>>(new Map());
-
+  // Fetch works
   useEffect(() => {
     if (!categoryId) {
       setWorks([]);
-      setNewDrafts([]);
       baselineRef.current.clear();
       return;
     }
@@ -63,15 +50,14 @@ export default function WorksTable({
       setError(null);
 
       try {
-        const response: AxiosResponse<Work[]> = await api.get(
+        const res: AxiosResponse<WorkRow[]> = await api.get(
           `/categories/${categoryId}/works`
         );
 
-        setWorks(response.data);
-        setNewDrafts([]);
+        setWorks(res.data);
 
-        const baseline = new Map<number, Work>();
-        response.data.forEach((w) => baseline.set(w.id, w));
+        const baseline = new Map<number, WorkRow>();
+        res.data.forEach((w) => baseline.set(w.id, w));
         baselineRef.current = baseline;
       } catch {
         setError("Failed to load works.");
@@ -83,98 +69,92 @@ export default function WorksTable({
     fetchWorks();
   }, [categoryId]);
 
+  // Sorted works
   const sortedWorks = useMemo(
     () => works.slice().sort((a, b) => a.order - b.order),
     [works]
   );
 
-  const sortedDrafts = useMemo(
-    () => newDrafts.slice().sort((a, b) => a.order - b.order),
-    [newDrafts]
-  );
-
+  // Dirty check
   const isDirty = useMemo(() => {
-    if (newDrafts.length > 0) return true;
+    for (const w of works) {
+      if (w.isNew) return true;
 
-    for (const work of works) {
-      const base = baselineRef.current.get(work.id);
-      if (!base) return true;
+      const b = baselineRef.current.get(w.id);
+      if (!b) return true;
 
       if (
-        work.title !== base.title ||
-        work.description !== base.description ||
-        (work.introduction ?? "") !== (base.introduction ?? "") ||
-        (work.date ?? "") !== (base.date ?? "") ||
-        (work.banner ?? "") !== (base.banner ?? "") ||
-        work.order !== base.order
+        w.title !== b.title ||
+        w.description !== b.description ||
+        (w.introduction ?? "") !== (b.introduction ?? "") ||
+        (w.date ?? "") !== (b.date ?? "") ||
+        (w.banner ?? "") !== (b.banner ?? "") ||
+        w.order !== b.order
       ) {
         return true;
       }
     }
-
     return false;
-  }, [works, newDrafts]);
+  }, [works]);
 
+  // Update field
   const updateField = <
-    K extends keyof Omit<Work, "id" | "createdAt" | "categoryId">
+    K extends keyof Omit<WorkRow, "id" | "isNew">
   >(
     id: number,
     field: K,
-    value: Work[K]
+    value: WorkRow[K]
   ) => {
     setWorks((prev) =>
       prev.map((w) => (w.id === id ? { ...w, [field]: value } : w))
     );
   };
 
-  const updateDraftField = <K extends keyof Omit<NewWorkDraft, "clientId">>(
-    clientId: string,
-    field: K,
-    value: NewWorkDraft[K]
-  ) => {
-    setNewDrafts((prev) =>
-      prev.map((d) => (d.clientId === clientId ? { ...d, [field]: value } : d))
-    );
-  };
-
+  // Add work (ID negativo)
   const addWork = () => {
     if (!categoryId) return;
 
-    const maxOrder = Math.max(
-      -1,
-      ...works.map((w) => w.order),
-      ...newDrafts.map((d) => d.order)
-    );
+    setWorks((prev) => {
+      const minId = prev.length
+        ? Math.min(...prev.map((w) => w.id))
+        : 0;
 
-    setNewDrafts((prev) => [
-      ...prev,
-      {
-        clientId: crypto.randomUUID(),
-        title: "New work",
-        description: "Description",
-        introduction: "",
-        date: "",
-        banner: "",
-        order: maxOrder + 1,
-      },
-    ]);
+      const maxOrder = prev.length
+        ? Math.max(...prev.map((w) => w.order))
+        : -1;
+
+      return [
+        ...prev,
+        {
+          id: minId - 1,
+          title: "New work",
+          description: "Description",
+          introduction: "",
+          date: "",
+          banner: "",
+          order: maxOrder + 1,
+          isNew: true,
+        },
+      ];
+    });
   };
 
-  const deleteWork = async (id: number) => {
+  // Delete
+  const deleteWork = async (work: WorkRow) => {
     try {
-      await api.delete(`/works/${id}`);
-      setWorks((prev) => prev.filter((w) => w.id !== id));
-      baselineRef.current.delete(id);
-      onWorkDeleted?.(id);
+      if (!work.isNew) {
+        await api.delete(`/works/${work.id}`);
+        baselineRef.current.delete(work.id);
+        onWorkDeleted?.(work.id);
+      }
+
+      setWorks((prev) => prev.filter((w) => w.id !== work.id));
     } catch {
       setError("Failed to delete work.");
     }
   };
 
-  const deleteDraft = (clientId: string) => {
-    setNewDrafts((prev) => prev.filter((d) => d.clientId !== clientId));
-  };
-
+  // Save all
   const saveAllWorks = async () => {
     if (!categoryId) return;
 
@@ -182,56 +162,50 @@ export default function WorksTable({
     setError(null);
 
     try {
-      if (newDrafts.length > 0) {
-        const created = await Promise.all(
-          newDrafts.map(async (d) => {
-            const res: AxiosResponse<Work> = await api.post("/works", {
-              title: d.title,
-              description: d.description,
-              introduction: d.introduction || undefined,
-              date: d.date || undefined,
-              banner: d.banner || undefined,
-              order: d.order,
-              categoryId,
-            });
-            return res.data;
-          })
-        );
-
-        setWorks((prev) => [...prev, ...created]);
-        created.forEach((w) => baselineRef.current.set(w.id, w));
-        setNewDrafts([]);
-      }
-
-      await Promise.all(
-        works.map((w) => {
+      for (const w of works) {
+        if (w.isNew) {
+          await api.post("/works", {
+            title: w.title,
+            description: w.description,
+            introduction: w.introduction || undefined,
+            date: w.date || undefined,
+            banner: w.banner || undefined,
+            order: w.order,
+            categoryId,
+          });
+        } else {
           const b = baselineRef.current.get(w.id);
-          if (
-            b &&
+          if (!b) continue;
+
+          const unchanged =
             w.title === b.title &&
             w.description === b.description &&
             (w.introduction ?? "") === (b.introduction ?? "") &&
             (w.date ?? "") === (b.date ?? "") &&
             (w.banner ?? "") === (b.banner ?? "") &&
-            w.order === b.order
-          ) {
-            return Promise.resolve();
-          }
+            w.order === b.order;
 
-          return api.patch(`/works/${w.id}`, {
-            title: w.title,
-            description: w.description,
-            introduction: w.introduction,
-            date: w.date,
-            banner: w.banner,
-            order: w.order,
-          });
-        })
+          if (!unchanged) {
+            await api.patch(`/works/${w.id}`, {
+              title: w.title,
+              description: w.description,
+              introduction: w.introduction,
+              date: w.date,
+              banner: w.banner,
+              order: w.order,
+            });
+          }
+        }
+      }
+
+      const refreshed: AxiosResponse<WorkRow[]> = await api.get(
+        `/categories/${categoryId}/works`
       );
 
-      const refreshed = new Map<number, Work>();
-      works.forEach((w) => refreshed.set(w.id, w));
-      baselineRef.current = refreshed;
+      setWorks(refreshed.data);
+
+      baselineRef.current.clear();
+      refreshed.data.forEach((w) => baselineRef.current.set(w.id, w));
     } catch {
       setError("Failed to save changes.");
     } finally {
@@ -239,6 +213,7 @@ export default function WorksTable({
     }
   };
 
+  // Render
   if (!categoryId) {
     return (
       <section className="border rounded-lg p-4 text-sm text-gray-400">
@@ -360,106 +335,19 @@ export default function WorksTable({
                 </td>
 
                 <td className="py-1 text-right whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => onViewWork(work.id)}
-                    className="text-xs underline underline-offset-4 mr-3"
-                  >
-                    View
-                  </button>
+                  {!work.isNew && (
+                    <button
+                      type="button"
+                      onClick={() => onViewWork(work.id)}
+                      className="text-xs underline underline-offset-4 mr-3"
+                    >
+                      View
+                    </button>
+                  )}
 
                   <button
                     type="button"
-                    onClick={() => deleteWork(work.id)}
-                    className="text-xs text-red-600 underline underline-offset-4"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {sortedDrafts.map((draft) => (
-              <tr key={draft.clientId} className="border-b last:border-b-0">
-                <td className="py-1 pr-2">
-                  <input
-                    value={draft.title}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(draft.clientId, "title", e.target.value)
-                    }
-                  />
-                </td>
-
-                <td className="py-1 pr-2">
-                  <textarea
-                    rows={2}
-                    value={draft.description}
-                    className="w-full resize-none bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(
-                        draft.clientId,
-                        "description",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td className="py-1 pr-2">
-                  <textarea
-                    rows={2}
-                    value={draft.introduction}
-                    className="w-full resize-none bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(
-                        draft.clientId,
-                        "introduction",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td className="py-1 pr-2">
-                  <input
-                    value={draft.date}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(draft.clientId, "date", e.target.value)
-                    }
-                  />
-                </td>
-
-                <td className="py-1 pr-2">
-                  <PreviewableUrlInput
-                    value={draft.banner}
-                    onChange={(v) =>
-                      updateDraftField(draft.clientId, "banner", v)
-                    }
-                    onPreview={setPreviewUrl}
-                  />
-                </td>
-
-                <td className="py-1 pr-2">
-                  <input
-                    type="number"
-                    value={draft.order}
-                    className="w-full bg-transparent outline-none"
-                    onChange={(e) =>
-                      updateDraftField(
-                        draft.clientId,
-                        "order",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </td>
-
-                <td className="py-1 text-right whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => deleteDraft(draft.clientId)}
+                    onClick={() => deleteWork(work)}
                     className="text-xs text-red-600 underline underline-offset-4"
                   >
                     Delete
