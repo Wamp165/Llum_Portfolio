@@ -99,7 +99,7 @@ export default function WorksPage() {
                     <img
                       src={work.banner}
                       alt={work.title}
-                      className="w-full h-auto max-h-[520px] object-contain object-left"
+                      className="w-full h-auto max-h-[520px] object-contain object-center md:object-left"
                     />
                   )}
                 </div>
