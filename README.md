@@ -117,7 +117,7 @@ npm run dev
 3. Log in using the credentials defined in your backend `.env` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`).
 4. From the dashboard, you can:
 * Update profile info (Bio, Socials).
-* Create Categories.
+* Rename Categories.
 * Add Works (Projects).
 * Build layout sections for each work (Text, Images, Grids).
 
