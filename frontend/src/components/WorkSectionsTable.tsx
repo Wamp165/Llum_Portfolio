@@ -1,76 +1,135 @@
-// WorkSectionsTable.tsx
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
+import ImagePreviewModal from "./ImagePreviewModal";
+import PreviewableUrlInput from "./PreviewableUrlInput";
 
-export type WorkSectionType =
-  | "IMAGE_LEFT_TEXT_RIGHT"
-  | "IMAGE_RIGHT_TEXT_LEFT"
-  | "IMAGE_CENTER_TEXT_BELOW"
-  | "TEXT_ONLY"
-  | "IMAGE_ONLY";
-
-type SectionRow = {
-  id: number;
-  type: WorkSectionType;
-  text?: string | null;
+type WorkRow = {
+  id: number; // >0 backend, <0 draft
+  title: string;
+  description: string;
+  introduction?: string | null;
+  date?: string | null;
+  banner?: string | null;
   order: number;
+  createdAt?: string;
+  categoryId?: number;
   isNew?: boolean;
 };
 
-type WorkSectionsTableProps = {
-  workId: number | null;
-  selectedSectionId: number | null;
-  onViewSection: (sectionId: number) => void;
-  onSectionDeleted?: (sectionId: number) => void;
+type WorksTableProps = {
+  categoryId: number | null;
+  selectedWorkId: number | null;
+  onViewWork: (workId: number) => void;
+  onWorkDeleted?: (workId: number) => void;
 };
 
-const SECTION_TYPES: WorkSectionType[] = [
-  "IMAGE_LEFT_TEXT_RIGHT",
-  "IMAGE_RIGHT_TEXT_LEFT",
-  "IMAGE_CENTER_TEXT_BELOW",
-  "TEXT_ONLY",
-  "IMAGE_ONLY",
-];
+export default function WorksTable({
+  categoryId,
+  selectedWorkId,
+  onViewWork,
+  onWorkDeleted,
+}: WorksTableProps): JSX.Element {
+  const [works, setWorks] = useState<WorkRow[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [workToDelete, setWorkToDelete] = useState<WorkRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-export default function WorkSectionsTable({
-  workId,
-  selectedSectionId,
-  onViewSection,
-  onSectionDeleted,
-}: WorkSectionsTableProps): JSX.Element {
-  const [sections, setSections] = useState<SectionRow[]>([]);
-  const [saving, setSaving] = useState<boolean>(false);
+  const baselineRef = useRef<Map<number, WorkRow>>(new Map());
 
+  // Fetch works
   useEffect(() => {
-    if (!workId) {
-      setSections([]);
+    if (!categoryId) {
+      setWorks([]);
+      baselineRef.current.clear();
       return;
     }
 
-    const fetchSections = async (): Promise<void> => {
-      const response: AxiosResponse<SectionRow[]> = await api.get(
-        `/works/${workId}/sections`
-      );
-      setSections(response.data);
+    const fetchWorks = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const res: AxiosResponse<WorkRow[]> = await api.get(
+          `/categories/${categoryId}/works`
+        );
+
+        setWorks(res.data);
+
+        const baseline = new Map<number, WorkRow>();
+        res.data.forEach((w) => baseline.set(w.id, w));
+        baselineRef.current = baseline;
+      } catch {
+        setError("Failed to load works.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchSections();
-  }, [workId]);
+    fetchWorks();
+  }, [categoryId]);
 
-  const addSection = (): void => {
-    setSections((prev) => {
-      const maxOrder =
-        prev.length > 0 ? Math.max(...prev.map((s) => s.order)) : -1;
+  // Sorted works
+  const sortedWorks = useMemo(
+    () => works.slice().sort((a, b) => a.order - b.order),
+    [works]
+  );
 
-      const minId = prev.length > 0 ? Math.min(...prev.map((s) => s.id)) : 0;
+  // Dirty check
+  const isDirty = useMemo(() => {
+    for (const w of works) {
+      if (w.isNew) return true;
+
+      const b = baselineRef.current.get(w.id);
+      if (!b) return true;
+
+      if (
+        w.title !== b.title ||
+        w.description !== b.description ||
+        (w.introduction ?? "") !== (b.introduction ?? "") ||
+        (w.date ?? "") !== (b.date ?? "") ||
+        (w.banner ?? "") !== (b.banner ?? "") ||
+        w.order !== b.order
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }, [works]);
+
+  // Update field
+  const updateField = <
+    K extends keyof Omit<WorkRow, "id" | "isNew">
+  >(
+    id: number,
+    field: K,
+    value: WorkRow[K]
+  ) => {
+    setWorks((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, [field]: value } : w))
+    );
+  };
+
+  // Add work
+  const addWork = () => {
+    if (!categoryId) return;
+
+    setWorks((prev) => {
+      const minId = prev.length ? Math.min(...prev.map((w) => w.id)) : 0;
+      const maxOrder = prev.length ? Math.max(...prev.map((w) => w.order)) : -1;
 
       return [
         ...prev,
         {
           id: minId - 1,
-          type: "TEXT_ONLY",
-          text: "",
+          title: "New work",
+          description: "Description",
+          introduction: "",
+          date: "",
+          banner: "",
           order: maxOrder + 1,
           isNew: true,
         },
@@ -78,166 +137,273 @@ export default function WorkSectionsTable({
     });
   };
 
-  const updateLocal = (
-    id: number,
-    data: Partial<Pick<SectionRow, "order" | "type" | "text">>
-  ): void => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...data } : s))
-    );
-  };
+  // Delete work
+  const deleteWork = async (work: WorkRow) => {
+    try {
+      if (!work.isNew) {
+        await api.delete(`/works/${work.id}`);
+        baselineRef.current.delete(work.id);
+        onWorkDeleted?.(work.id);
+      }
 
-  const deleteSection = async (section: SectionRow): Promise<void> => {
-    if (!section.isNew) {
-      await api.delete(`/works/sections/${section.id}`);
-      onSectionDeleted?.(section.id);
+      setWorks((prev) => prev.filter((w) => w.id !== work.id));
+    } catch {
+      setError("Failed to delete work.");
     }
-
-    setSections((prev) => prev.filter((s) => s.id !== section.id));
   };
 
-  const saveSections = async (): Promise<void> => {
-    if (!workId) return;
+  // Save all
+  const saveAllWorks = async () => {
+    if (!categoryId) return;
 
-    setSaving(true);
+    setIsSaving(true);
+    setError(null);
 
     try {
-      for (const section of sections) {
-        if (section.isNew) {
-          await api.post(`/works/${workId}/sections`, {
-            type: section.type,
-            text: section.text,
-            order: section.order,
+      for (const w of works) {
+        if (w.isNew) {
+          await api.post("/works", {
+            title: w.title,
+            description: w.description,
+            introduction: w.introduction || undefined,
+            date: w.date || undefined,
+            banner: w.banner || undefined,
+            order: w.order,
+            categoryId,
           });
         } else {
-          await api.patch(`/works/sections/${section.id}`, {
-            type: section.type,
-            text: section.text,
-            order: section.order,
-          });
+          const b = baselineRef.current.get(w.id);
+          if (!b) continue;
+
+          const unchanged =
+            w.title === b.title &&
+            w.description === b.description &&
+            (w.introduction ?? "") === (b.introduction ?? "") &&
+            (w.date ?? "") === (b.date ?? "") &&
+            (w.banner ?? "") === (b.banner ?? "") &&
+            w.order === b.order;
+
+          if (!unchanged) {
+            await api.patch(`/works/${w.id}`, {
+              title: w.title,
+              description: w.description,
+              introduction: w.introduction,
+              date: w.date,
+              banner: w.banner,
+              order: w.order,
+            });
+          }
         }
       }
 
-      const refreshed: AxiosResponse<SectionRow[]> = await api.get(
-        `/works/${workId}/sections`
+      const refreshed: AxiosResponse<WorkRow[]> = await api.get(
+        `/categories/${categoryId}/works`
       );
-      setSections(refreshed.data);
+
+      setWorks(refreshed.data);
+      baselineRef.current.clear();
+      refreshed.data.forEach((w) => baselineRef.current.set(w.id, w));
+    } catch {
+      setError("Failed to save changes.");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
-  return (
-    <section className="border rounded-lg p-4 h-[420px] flex flex-col">
-      {/* Header fijo */}
-      <div className="flex justify-between mb-2 shrink-0">
-        <h3 className="text-sm font-medium">Sections</h3>
+  if (!categoryId) {
+    return (
+      <section className="border rounded-lg p-4 text-sm text-gray-400">
+        Select a category to view works.
+      </section>
+    );
+  }
 
-        <div className="space-x-3">
-          <button onClick={addSection} className="text-xs underline">
+  return (
+    <section className="border rounded-lg p-4 h-[300px] flex flex-col">
+      <div className="flex items-center justify-between mb-3 shrink-0">
+        <h2 className="text-sm font-medium">Works</h2>
+
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={addWork}
+            className="text-xs underline underline-offset-4"
+          >
             Add
           </button>
 
           <button
-            onClick={saveSections}
-            disabled={saving}
-            className="text-xs underline disabled:opacity-50"
+            type="button"
+            onClick={saveAllWorks}
+            disabled={!isDirty || isSaving}
+            className="text-xs underline underline-offset-4 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save"}
+            {isSaving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
 
-      {!workId ? (
-        <div className="text-sm text-gray-400">
-          Select a work to view sections
-        </div>
+      {error && (
+        <div className="mb-2 text-xs text-red-600 shrink-0">{error}</div>
+      )}
+
+      {isLoading ? (
+        <div className="text-sm">Loading works…</div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <table className="w-full text-sm border-collapse">
-            {/* Cabecera fija */}
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="border-b text-gray-500">
-                <th className="w-16 text-left py-1">Order</th>
-                <th className="w-56 text-left py-1">Type</th>
-                <th className="text-left py-1">Text</th>
-                <th className="w-32 text-right py-1">Actions</th>
+                <th className="text-left py-1">Title</th>
+                <th className="text-left py-1">Description</th>
+                <th className="text-left py-1">Introduction</th>
+                <th className="text-left py-1 w-24">Date</th>
+                <th className="text-left py-1">Banner</th>
+                <th className="text-left py-1 w-16">Order</th>
+                <th className="w-28" />
               </tr>
             </thead>
 
             <tbody>
-              {sections
-                .slice()
-                .sort((a, b) => a.order - b.order)
-                .map((section) => (
-                  <tr
-                    key={section.id}
-                    className={`border-b last:border-b-0 ${
-                      selectedSectionId === section.id ? "bg-gray-50" : ""
-                    }`}
-                  >
-                    <td className="py-1">
-                      <input
-                        type="number"
-                        value={section.order}
-                        className="w-14 bg-transparent outline-none"
-                        onChange={(e) =>
-                          updateLocal(section.id, {
-                            order: Number(e.target.value),
-                          })
-                        }
-                      />
-                    </td>
+              {sortedWorks.map((work) => (
+                <tr
+                  key={work.id}
+                  className={`border-b last:border-b-0 ${
+                    selectedWorkId === work.id ? "bg-gray-50" : ""
+                  }`}
+                >
+                  <td className="py-1 pr-2">
+                    <input
+                      value={work.title}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "title", e.target.value)
+                      }
+                    />
+                  </td>
 
-                    <td className="py-1">
-                      <select
-                        value={section.type}
-                        className="bg-transparent outline-none"
-                        onChange={(e) =>
-                          updateLocal(section.id, {
-                            type: e.target.value as WorkSectionType,
-                          })
-                        }
-                      >
-                        {SECTION_TYPES.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                  <td className="py-1 pr-2">
+                    <textarea
+                      rows={2}
+                      value={work.description}
+                      className="w-full resize-none bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "description", e.target.value)
+                      }
+                    />
+                  </td>
 
-                    <td className="py-1">
-                      <input
-                        value={section.text ?? ""}
-                        className="w-full bg-transparent outline-none"
-                        onChange={(e) =>
-                          updateLocal(section.id, { text: e.target.value })
-                        }
-                      />
-                    </td>
+                  <td className="py-1 pr-2">
+                    <textarea
+                      rows={2}
+                      value={work.introduction ?? ""}
+                      className="w-full resize-none bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "introduction", e.target.value)
+                      }
+                    />
+                  </td>
 
-                    <td className="py-1 text-right space-x-2 whitespace-nowrap">
-                      {!section.isNew && (
-                        <button
-                          onClick={() => onViewSection(section.id)}
-                          className="text-xs underline"
-                        >
-                          View
-                        </button>
-                      )}
+                  <td className="py-1 pr-2">
+                    <input
+                      value={work.date ?? ""}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "date", e.target.value)
+                      }
+                    />
+                  </td>
 
+                  <td className="py-1 pr-2">
+                    <PreviewableUrlInput
+                      value={work.banner ?? ""}
+                      onChange={(v) => updateField(work.id, "banner", v)}
+                      onPreview={setPreviewUrl}
+                    />
+                  </td>
+
+                  <td className="py-1 pr-2">
+                    <input
+                      type="number"
+                      value={work.order}
+                      className="w-full bg-transparent outline-none"
+                      onChange={(e) =>
+                        updateField(work.id, "order", Number(e.target.value))
+                      }
+                    />
+                  </td>
+
+                  <td className="py-1 text-right whitespace-nowrap">
+                    {!work.isNew && (
                       <button
-                        onClick={() => deleteSection(section)}
-                        className="text-xs text-red-600 underline"
+                        type="button"
+                        onClick={() => onViewWork(work.id)}
+                        className="text-xs underline underline-offset-4 mr-3"
                       >
-                        Delete
+                        View
                       </button>
-                    </td>
-                  </tr>
-                ))}
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setWorkToDelete(work)}
+                      className="text-xs text-red-600 underline underline-offset-4"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {previewUrl && (
+        <ImagePreviewModal
+          imageUrl={previewUrl}
+          onClose={() => setPreviewUrl(null)}
+        />
+      )}
+
+      {workToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => !isDeleting && setWorkToDelete(null)}
+          />
+
+          <div className="relative bg-white w-full max-w-sm rounded-lg shadow-lg p-5">
+            <p className="text-sm mb-4">
+              Are you sure you want to delete{" "}
+              <span className="font-medium">{workToDelete.title}</span>?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setWorkToDelete(null)}
+                className="text-sm px-3 py-1 rounded-md border"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  await deleteWork(workToDelete);
+                  setIsDeleting(false);
+                  setWorkToDelete(null);
+                }}
+                className="text-sm px-3 py-1 rounded-md bg-red-600 text-white disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

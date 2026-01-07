@@ -21,6 +21,8 @@ export default function ImagesTable({
   const [images, setImages] = useState<ImageRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageToDelete, setImageToDelete] = useState<ImageRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setImages([]);
@@ -156,7 +158,7 @@ export default function ImagesTable({
 
                     <td className="py-1 text-right">
                       <button
-                        onClick={() => deleteImage(img)}
+                        onClick={() => setImageToDelete(img)}
                         className="text-xs text-red-600 underline"
                       >
                         Delete
@@ -174,6 +176,46 @@ export default function ImagesTable({
           imageUrl={previewUrl}
           onClose={() => setPreviewUrl(null)}
         />
+      )}
+
+      {imageToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => !isDeleting && setImageToDelete(null)}
+          />
+
+          <div className="relative bg-white w-full max-w-sm rounded-lg shadow-lg p-5">
+            <p className="text-sm mb-4">
+              Are you sure you want to delete this image?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setImageToDelete(null)}
+                className="text-sm px-3 py-1 rounded-md border"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  await deleteImage(imageToDelete);
+                  setIsDeleting(false);
+                  setImageToDelete(null);
+                }}
+                className="text-sm px-3 py-1 rounded-md bg-red-600 text-white disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

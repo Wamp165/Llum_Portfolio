@@ -35,6 +35,8 @@ export default function WorksTable({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [workToDelete, setWorkToDelete] = useState<WorkRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const baselineRef = useRef<Map<number, WorkRow>>(new Map());
 
@@ -218,7 +220,7 @@ export default function WorksTable({
 
   return (
     <section className="border rounded-lg p-4 h-[300px] flex flex-col">
-      {/* Header fijo (NO scrollea) */}
+
       <div className="flex items-center justify-between mb-3 shrink-0">
         <h2 className="text-sm font-medium">Works</h2>
 
@@ -251,7 +253,6 @@ export default function WorksTable({
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <table className="w-full text-sm border-collapse">
-            {/* Column headers fijos usando sticky */}
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="border-b text-gray-500">
                 <th className="text-left py-1">Title</th>
@@ -346,7 +347,7 @@ export default function WorksTable({
 
                     <button
                       type="button"
-                      onClick={() => deleteWork(work)}
+                      onClick={() => setWorkToDelete(work)}
                       className="text-xs text-red-600 underline underline-offset-4"
                     >
                       Delete
@@ -364,6 +365,47 @@ export default function WorksTable({
           imageUrl={previewUrl}
           onClose={() => setPreviewUrl(null)}
         />
+      )}
+
+      {workToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => !isDeleting && setWorkToDelete(null)}
+          />
+
+          <div className="relative bg-white w-full max-w-sm rounded-lg shadow-lg p-5">
+            <p className="text-sm mb-4">
+              Are you sure you want to delete{" "}
+              <span className="font-medium">{workToDelete.title}</span>?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setWorkToDelete(null)}
+                className="text-sm px-3 py-1 rounded-md border"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  await deleteWork(workToDelete);
+                  setIsDeleting(false);
+                  setWorkToDelete(null);
+                }}
+                className="text-sm px-3 py-1 rounded-md bg-red-600 text-white disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
