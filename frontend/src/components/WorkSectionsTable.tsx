@@ -1,4 +1,3 @@
-// WorkSectionsTable.tsx
 import { useEffect, useState, type JSX } from "react";
 import { api } from "../lib/api";
 import type { AxiosResponse } from "axios";
@@ -88,6 +87,12 @@ export default function WorkSectionsTable({
   };
 
   const deleteSection = async (section: SectionRow): Promise<void> => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this section?"
+    );
+
+    if (!confirmed) return;
+
     if (!section.isNew) {
       await api.delete(`/works/sections/${section.id}`);
       onSectionDeleted?.(section.id);
@@ -104,17 +109,9 @@ export default function WorkSectionsTable({
     try {
       for (const section of sections) {
         if (section.isNew) {
-          await api.post(`/works/${workId}/sections`, {
-            type: section.type,
-            text: section.text,
-            order: section.order,
-          });
+          await api.post(`/works/${workId}/sections`, section);
         } else {
-          await api.patch(`/works/sections/${section.id}`, {
-            type: section.type,
-            text: section.text,
-            order: section.order,
-          });
+          await api.patch(`/works/sections/${section.id}`, section);
         }
       }
 
@@ -129,15 +126,12 @@ export default function WorkSectionsTable({
 
   return (
     <section className="border rounded-lg p-4 h-[420px] flex flex-col">
-      {/* Header fijo */}
       <div className="flex justify-between mb-2 shrink-0">
         <h3 className="text-sm font-medium">Sections</h3>
-
         <div className="space-x-3">
           <button onClick={addSection} className="text-xs underline">
             Add
           </button>
-
           <button
             onClick={saveSections}
             disabled={saving}
@@ -155,7 +149,6 @@ export default function WorkSectionsTable({
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <table className="w-full text-sm border-collapse">
-            {/* Cabecera fija */}
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="border-b text-gray-500">
                 <th className="w-16 text-left py-1">Order</th>

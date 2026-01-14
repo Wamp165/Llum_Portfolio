@@ -137,6 +137,12 @@ export default function WorksTable({
 
   // Delete work
   const deleteWork = async (work: WorkRow) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this work?"
+    );
+
+    if (!confirmed) return;
+
     try {
       if (!work.isNew) {
         await api.delete(`/works/${work.id}`);

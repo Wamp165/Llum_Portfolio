@@ -27,7 +27,7 @@ export default function ImagesTable({
 
     if (!sectionId) return;
 
-    const fetchImages = async () => {
+    const fetchImages = async (): Promise<void> => {
       const res: AxiosResponse<ImageRow[]> =
         await api.get(`/sections/${sectionId}/images`);
       setImages(res.data);
@@ -39,13 +39,13 @@ export default function ImagesTable({
   const updateLocal = (
     id: number,
     data: Partial<Pick<ImageRow, "imageUrl" | "order">>
-  ) => {
+  ): void => {
     setImages((prev) =>
       prev.map((img) => (img.id === id ? { ...img, ...data } : img))
     );
   };
 
-  const addImage = () => {
+  const addImage = (): void => {
     if (!sectionId) return;
 
     setImages((prev) => [
@@ -59,8 +59,12 @@ export default function ImagesTable({
     ]);
   };
 
-  const deleteImage = async (image: ImageRow) => {
-    if (!sectionId) return;
+  const deleteImage = async (image: ImageRow): Promise<void> => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this image?"
+    );
+
+    if (!confirmed) return;
 
     if (!image.isNew) {
       await api.delete(`/sections/images/${image.id}`);
@@ -69,7 +73,7 @@ export default function ImagesTable({
     setImages((prev) => prev.filter((i) => i.id !== image.id));
   };
 
-  const saveImages = async () => {
+  const saveImages = async (): Promise<void> => {
     if (!sectionId) return;
 
     setSaving(true);
