@@ -95,11 +95,26 @@ export default function UserInfoTable(): JSX.Element {
             }
           />
           <EditableRow
+            label="Home Banner"
+            value={profile.homeBanner}
+            onChange={(value) =>
+              updateField("homeBanner", value)
+            }
+          />
+          <EditableRow
             label="Bio"
             value={profile.bio}
             textarea
             onChange={(value) =>
               updateField("bio", value)
+            }
+          />
+          <EditableRow
+            label="Profile Picture"
+            value={profile.profilePicture}
+            textarea
+            onChange={(value) =>
+              updateField("profilePicture", value)
             }
           />
           <EditableRow
