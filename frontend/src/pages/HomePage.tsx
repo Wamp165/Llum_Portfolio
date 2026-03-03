@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import type { CategoryNavItem } from "../components/Navbar";
 import { API_URL } from "../config";
+import { Helmet } from "react-helmet-async";
 
 interface PublicUser {
   id: number;
@@ -47,6 +48,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{`Home | ${user.name}`}</title>
+      </Helmet>
       <div className="mx-auto w-[92vw] max-w-[1050px]">
         <Navbar name={user.name} categories={navCategories} />
 

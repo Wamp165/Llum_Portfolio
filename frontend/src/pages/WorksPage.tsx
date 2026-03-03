@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import type { CategoryNavItem } from "../components/Navbar";
 import { API_URL } from "../config";
+import { Helmet } from "react-helmet-async";
 
 interface PublicUser {
   id: number;
@@ -82,6 +83,9 @@ export default function WorksPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{`${currentCategory.name} | ${user.name}`}</title>
+      </Helmet>
       <div className="mx-auto w-[92vw] max-w-[1050px]">
         <Navbar name={user.name} categories={navCategories} />
 

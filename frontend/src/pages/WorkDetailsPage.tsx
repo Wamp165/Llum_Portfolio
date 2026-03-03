@@ -5,6 +5,7 @@ import type { CategoryNavItem } from "../components/Navbar";
 import WorkSectionRenderer from "../components/WorkSectionRenderer";
 import { API_URL } from "../config";
 import type { WorkSection } from "../types/work";
+import { Helmet } from "react-helmet-async";
 
 interface PublicUser {
   id: number;
@@ -79,6 +80,9 @@ export default function WorkDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{`${work.title} | ${user.name}`}</title>
+      </Helmet>
       <div className="mx-auto w-[92vw] max-w-[1050px]">
         <Navbar name={user.name} categories={navCategories} />
 
