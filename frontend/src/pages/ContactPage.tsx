@@ -55,6 +55,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-white">
       <Helmet>
         <title>{`Contact | ${user.name}`}</title>
+        <meta property="og:title" content={`Contact | ${user.name}`}/>
       </Helmet>
       <div className="mx-auto w-[92vw] max-w-[1050px]">
         <Navbar name={user.name} categories={navCategories} />

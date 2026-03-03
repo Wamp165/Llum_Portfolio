@@ -85,6 +85,7 @@ export default function WorksPage() {
     <div className="min-h-screen bg-white">
       <Helmet>
         <title>{`${currentCategory.name} | ${user.name}`}</title>
+        <meta property="og:title" content={`${currentCategory.name} | ${user.name}`}/>
       </Helmet>
       <div className="mx-auto w-[92vw] max-w-[1050px]">
         <Navbar name={user.name} categories={navCategories} />
